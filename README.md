@@ -15,8 +15,6 @@
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/floslist)
 
-> The interface is currently in German. An English interface is on the roadmap.
-
 ---
 
 ## Why this exists
@@ -66,7 +64,7 @@ flowchart LR
 
 1. **[Download Talkback.zip](https://github.com/Floslis/avantis-talkback/releases/latest/download/Talkback.zip)**, always the latest version
 2. Put the `Talkback` folder **directly into your home folder** and right-click `Installieren.command` → Open
-3. In the tool, open **Einstellungen** (settings) → **Pult suchen** (find desk)
+3. In the tool, open **Settings** → **Find desk**
 
 **📖 Step by step, including desk setup and troubleshooting: [INSTALL.md](INSTALL.md)**
 
@@ -86,13 +84,13 @@ Each profile is a folder in `branding/` with a `profil.json` and an optional `lo
   "titel": "Talkback",
   "logo": "logo.svg",
   "farben": {
-    "hell":   { "an": "#c2410c", "an-hell": "#ffedd5" },
-    "dunkel": { "an": "#fb923c", "an-hell": "#3b1d0c" }
+    "dunkel": { "akzent": "#ff8a1f" },
+    "hell":   { "akzent": "#c2410c" }
   }
 }
 ```
 
-Choose the profile under Einstellungen → Aussehen. Your own profiles are not tracked by Git and survive updates. See `branding/beispiel/` for an example.
+Choose the profile under Settings → Appearance. Your own profiles are not tracked by Git and survive updates. See `branding/beispiel/` for an example.
 
 ## Roadmap
 
@@ -100,7 +98,7 @@ Choose the profile under Einstellungen → Aussehen. Your own profiles are not t
 - [x] Branding profiles: logo, title, colours
 - [x] Updates from GitHub: checks every 6 hours, installs at 4 am (never during a service) or with one click
 - [ ] **More desks** via drivers: dLive, SQ
-- [ ] **English interface**
+- [x] English interface
 - [ ] **Control from phone or tablet** on the local network, optional
 
 ## Good to know

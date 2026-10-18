@@ -1,122 +1,55 @@
-<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Avantis Talkback</title>
-<style>
-/* Layout: ein Bildschirm fürs Tablet am Pult – oben die Gruppen (wohin Talkback geht), darunter die 12 In-Ear-Mixe, die zeigen, wer dich hört */
-:root {
-  --bg: #eef0f2; --flaeche: #ffffff; --linie: #c9ced6; --text: #14181f; --leise: #5b6472;
-  --an: #d9282f; --an-hell: #fde7e8; --wahl: #1f6feb; --wahl-hell: #dbe8ff;
-  --display: "Barlow Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
-  --body: "Barlow", "Avenir Next", system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
-}
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0d1014; --flaeche: #171b21; --linie: #2a313b; --text: #e8ebf0; --leise: #8c96a5;
-  --an: #ff4d52; --an-hell: #3a1517; --wahl: #4c8dff; --wahl-hell: #16243d; color-scheme: dark } }
-:root[data-theme="dark"] {
-  --bg: #0d1014; --flaeche: #171b21; --linie: #2a313b; --text: #e8ebf0; --leise: #8c96a5;
-  --an: #ff4d52; --an-hell: #3a1517; --wahl: #4c8dff; --wahl-hell: #16243d; color-scheme: dark }
-html, body { height: 100%; }
-body { background: var(--bg); color: var(--text); font-family: var(--body); font-size: 16px; }
-.app { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 24px; display: grid; gap: 18px; }
-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
-h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: .02em; margin: 0; }
-.status { font-family: var(--mono); font-size: 12px; color: var(--leise); border: 1px solid var(--linie); border-radius: 999px; padding: 3px 10px; }
-.status b { color: var(--an); font-weight: 600; }
-.kopf { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 0 0 8px; }
-.label { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--leise); margin: 0; font-weight: 600; }
-.gruppen { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
-.gruppe { font-family: var(--display); font-size: 24px; font-weight: 700; letter-spacing: .03em; padding: 14px 12px 10px; border-radius: 10px;
-  border: 2px solid var(--linie); background: var(--flaeche); color: var(--text); cursor: pointer; display: grid; gap: 2px; text-align: left; }
-.gruppe small { font-family: var(--body); font-size: 13px; font-weight: 500; color: var(--leise); letter-spacing: 0; }
-.gruppe[aria-pressed="true"] { border-color: var(--an); background: var(--an-hell); color: var(--an); }
-.gruppe.bearbeitet { border-color: var(--wahl); background: var(--wahl-hell); color: var(--text); }
-.mixe { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
-@media (max-width: 640px) { .mixe { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.mix { border: 2px solid var(--linie); background: var(--flaeche); color: var(--text); border-radius: 10px; padding: 10px 8px; cursor: pointer;
-  display: grid; gap: 4px; text-align: left; min-height: 74px; align-content: start; }
-.mix .nr { font-family: var(--mono); font-size: 11px; color: var(--leise); }
-.mix .name { font-weight: 600; font-size: 15px; line-height: 1.2; overflow-wrap: anywhere; }
-.mix.hoert { border-color: var(--an); background: var(--an-hell); }
-.mix.hoert .nr { color: var(--an); font-weight: 600; }
-.mix.drin { border-color: var(--wahl); background: var(--wahl-hell); }
-.mix:disabled, .gruppe:disabled, .aus:disabled { cursor: default; opacity: .45; }
-.mix.unbekannt { border-style: dashed; }
-.status.ok b { color: #2da44e; }
-.kopfrechts { display: flex; gap: 8px; align-items: center; }
-a.knopf { text-decoration: none; }
-.leer { color: var(--leise); font-size: 14px; }
-.update { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; border: 2px solid var(--wahl); background: var(--wahl-hell); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
-.update[hidden] { display: none; } /* sonst überstimmt display:flex das Ausblenden */
-.fuss-rechts { margin-left: auto; display: flex; gap: 12px; align-items: center; }
-.kofi { margin-left: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px;
-  background: #72a4f2; color: #fff; font: 600 12px var(--body); text-decoration: none; }
-.kofi:hover { background: #5a8fe0; }
-.knopf { border: 1px solid var(--linie); background: var(--flaeche); color: var(--text); border-radius: 8px; padding: 7px 12px; font: 600 14px var(--body); cursor: pointer; }
-.knopf[aria-pressed="true"] { border-color: var(--wahl); color: var(--wahl); }
-.aus { border: 2px solid var(--linie); background: var(--flaeche); color: var(--text); border-radius: 10px; padding: 12px; font: 600 15px var(--body); cursor: pointer; }
-.marke { display: flex; align-items: center; gap: 14px; }
-.logo:empty { display: none; }
-.logo svg { height: 34px; width: auto; color: var(--text); display: block; }
-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--leise); font-size: 12px; padding-top: 8px; border-top: 1px solid var(--linie); }
-.logo-ft { height: 20px; width: auto; }
-.logo-ftname { height: 11px; width: auto; }
-.gruppe { position: relative; }
-.zahnrad { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center;
-  color: var(--leise); border: 1px solid var(--linie); background: var(--bg); }
-.zahnrad svg { width: 18px; height: 18px; }
-.zahnrad:hover, .gruppe.bearbeitet .zahnrad { color: var(--wahl); border-color: var(--wahl); }
-.hinweis { font-size: 13px; color: var(--leise); line-height: 1.5; margin: 0; max-width: 72ch; }
-button:focus-visible { outline: 3px solid var(--wahl); outline-offset: 2px; }
-@media (prefers-reduced-motion: no-preference) { .gruppe, .mix { transition: background .12s, border-color .12s, color .12s; } }
-</style>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@700&family=JetBrains+Mono:wght@400;600&display=swap">
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talkback</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="stream.css">
+<link rel="stylesheet" href="talkback.css">
+</head>
+<body>
+<!-- Oben die Gruppen (wohin Talkback geht), darunter die Mixe. Grün = hört dich, wie die Softkey-LED am Pult -->
+<header class="kopfleiste"><div class="innen">
+  <span class="logo" id="logo"></span><h1 id="titel">Talkback</h1>
+  <div class="rechts">
+    <span class="kapsel" id="status" data-t="verbinde"></span>
+    <button type="button" id="pause"></button>
+    <button type="button" id="beenden" data-t="beenden"></button>
+    <a class="knopf" href="/einstellungen" data-t="einstellungen"></a>
+  </div>
+</div></header>
 
-<div class="app">
-  <header>
-    <div class="marke"><span class="logo" id="logo"></span> <h1 id="titel">Talkback</h1></div>
-    <span class="kopfrechts"><span class="status" id="status"><b>verbinde …</b></span> <a class="knopf" href="/einstellungen">Einstellungen</a></span>
-  </header>
+<main class="innen">
+  <div class="kasten ecken meldung" id="weg" hidden>
+    <p><b id="wegTitel"></b><br><span class="leise" id="wegText"></span></p>
+    <a class="knopf" href="/einstellungen" id="wegKnopf"></a>
+  </div>
+  <div class="kasten meldung update" id="update" hidden>
+    <p id="updateText"></p>
+    <button type="button" id="updateKnopf" data-t="jetzt_installieren"></button>
+  </div>
 
-  <div class="update" id="update" hidden><span id="updateText"></span><button class="knopf" id="updateKnopf" type="button">Jetzt installieren</button></div>
+  <p class="ueber" data-t="gruppen_titel"></p>
+  <p class="hinweis" data-t="gruppen_hinweis"></p>
+  <div class="gruppen" id="gruppen"></div>
 
-  <section>
-    <div class="kopf"><p class="label">Talkback geht an · antippen oder Softkey am Pult schaltet die Gruppe an/aus, mehrere gleichzeitig möglich</p></div>
-    <div class="gruppen" id="gruppen"></div>
-  </section>
+  <div class="zeile"><p class="ueber" id="mixTitel"></p><button type="button" class="haupt" id="fertig" data-t="fertig" hidden></button></div>
+  <p class="hinweis" id="mixHinweis"></p>
+  <div class="mixe" id="mixe"></div>
 
-  <section>
-    <div class="kopf">
-      <p class="label" id="mixLabel">In-Ear-Mixe</p>
-      <button class="knopf" id="fertig" type="button" hidden>Fertig</button>
-    </div>
-    <div class="mixe" id="mixe"></div>
-  </section>
+  <button type="button" class="aus" id="aus" data-t="niemand"></button>
+  <p class="hinweis" style="margin-top:14px" data-t="erklaerung"></p>
+</main>
 
-  <button class="aus" id="aus" type="button">Talkback an niemanden</button>
+<footer class="innen fuss">
+  <span data-t="produkt_von"></span>
+  <span class="ft"><svg role="img" aria-label="" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84.346 90.483"><path fill="currentColor" fill-rule="evenodd" d="M 39.949 15.004 L 39.949 1.000 L 1.000 1.000 L 1.000 9.316 L 6.617 9.316 L 6.617 43.961 L 1.000 43.961 L 1.000 52.277 L 24.707 52.277 L 24.707 43.961 L 15.586 43.961 L 15.586 32.293 L 28.062 32.293 L 28.062 24.270 L 15.586 24.270 L 15.586 9.316 L 32.219 9.316 L 32.219 15.004 Z M 51.835 89.483 L 72.112 89.483 L 72.112 81.166 L 66.499 81.166 L 66.499 46.522 L 75.616 46.522 L 75.616 52.209 L 83.346 52.209 L 83.346 38.205 L 40.237 38.205 L 40.237 52.209 L 47.971 52.209 L 47.971 46.522 L 57.378 46.522 L 57.378 81.166 L 51.835 81.166 Z"/></svg> <svg role="img" aria-label="FLOTECH" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88.628 13.031"><path fill="currentColor" fill-rule="evenodd" d="M 3.203 7.609 L 3.203 12.031 L 1.000 12.031 L 1.000 1.000 L 9.828 1.000 L 9.828 3.203 L 3.203 3.203 L 3.203 5.406 L 9.828 5.406 L 9.828 7.609 Z M 12.495 12.031 L 12.495 1.000 L 14.683 1.000 L 14.683 9.828 L 21.323 9.828 L 21.323 12.031 Z M 23.991 9.828 L 23.991 3.203 L 26.194 3.203 L 26.194 1.000 L 32.819 1.000 L 32.819 3.203 L 35.022 3.203 L 35.022 9.828 L 32.819 9.828 L 32.819 12.031 L 26.194 12.031 L 26.194 9.828 Z M 32.787 9.828 L 32.787 3.203 L 26.225 3.203 L 26.225 9.828 Z M 44.319 3.203 L 44.319 12.031 L 42.116 12.031 L 42.116 3.203 L 37.694 3.203 L 37.694 1.000 L 48.725 1.000 L 48.725 3.203 Z M 51.398 12.031 L 51.398 1.000 L 60.226 1.000 L 60.226 3.203 L 53.601 3.203 L 53.601 5.406 L 60.226 5.406 L 60.226 7.609 L 53.601 7.609 L 53.601 9.828 L 60.226 9.828 L 60.226 12.031 Z M 65.096 3.203 L 65.096 9.828 L 71.721 9.828 L 71.721 12.031 L 65.096 12.031 L 65.096 9.828 L 62.893 9.828 L 62.893 3.203 Z M 71.721 5.422 L 71.721 3.203 L 65.096 3.203 L 65.096 1.000 L 71.721 1.000 L 71.721 3.203 L 73.924 3.203 L 73.924 5.422 Z M 71.721 9.828 L 71.721 7.609 L 73.924 7.609 L 73.924 9.828 Z M 85.424 12.031 L 85.424 7.609 L 78.799 7.609 L 78.799 12.031 L 76.596 12.031 L 76.596 1.000 L 78.799 1.000 L 78.799 5.406 L 85.424 5.406 L 85.424 1.000 L 87.628 1.000 L 87.628 12.031 Z"/></svg></span>
+  <a class="kofi" href="https://ko-fi.com/floslist" target="_blank" rel="noopener">☕ <span data-t="kofi"></span></a>
+  <span class="version" id="version"></span>
+</footer>
 
-  <p class="hinweis" id="hinweis"></p>
-
-  <footer><span>Ein Produkt von</span><svg class="logo-ft" role="img" aria-label="" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84.346 90.483"><path fill="currentColor" fill-rule="evenodd" d="M 39.949 15.004 L 39.949 1.000 L 1.000 1.000 L 1.000 9.316 L 6.617 9.316 L 6.617 43.961 L 1.000 43.961 L 1.000 52.277 L 24.707 52.277 L 24.707 43.961 L 15.586 43.961 L 15.586 32.293 L 28.062 32.293 L 28.062 24.270 L 15.586 24.270 L 15.586 9.316 L 32.219 9.316 L 32.219 15.004 Z M 51.835 89.483 L 72.112 89.483 L 72.112 81.166 L 66.499 81.166 L 66.499 46.522 L 75.616 46.522 L 75.616 52.209 L 83.346 52.209 L 83.346 38.205 L 40.237 38.205 L 40.237 52.209 L 47.971 52.209 L 47.971 46.522 L 57.378 46.522 L 57.378 81.166 L 51.835 81.166 Z"/></svg> <svg class="logo-ftname" role="img" aria-label="FLOTECH" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88.628 13.031"><path fill="currentColor" fill-rule="evenodd" d="M 3.203 7.609 L 3.203 12.031 L 1.000 12.031 L 1.000 1.000 L 9.828 1.000 L 9.828 3.203 L 3.203 3.203 L 3.203 5.406 L 9.828 5.406 L 9.828 7.609 Z M 12.495 12.031 L 12.495 1.000 L 14.683 1.000 L 14.683 9.828 L 21.323 9.828 L 21.323 12.031 Z M 23.991 9.828 L 23.991 3.203 L 26.194 3.203 L 26.194 1.000 L 32.819 1.000 L 32.819 3.203 L 35.022 3.203 L 35.022 9.828 L 32.819 9.828 L 32.819 12.031 L 26.194 12.031 L 26.194 9.828 Z M 32.787 9.828 L 32.787 3.203 L 26.225 3.203 L 26.225 9.828 Z M 44.319 3.203 L 44.319 12.031 L 42.116 12.031 L 42.116 3.203 L 37.694 3.203 L 37.694 1.000 L 48.725 1.000 L 48.725 3.203 Z M 51.398 12.031 L 51.398 1.000 L 60.226 1.000 L 60.226 3.203 L 53.601 3.203 L 53.601 5.406 L 60.226 5.406 L 60.226 7.609 L 53.601 7.609 L 53.601 9.828 L 60.226 9.828 L 60.226 12.031 Z M 65.096 3.203 L 65.096 9.828 L 71.721 9.828 L 71.721 12.031 L 65.096 12.031 L 65.096 9.828 L 62.893 9.828 L 62.893 3.203 Z M 71.721 5.422 L 71.721 3.203 L 65.096 3.203 L 65.096 1.000 L 71.721 1.000 L 71.721 3.203 L 73.924 3.203 L 73.924 5.422 Z M 71.721 9.828 L 71.721 7.609 L 73.924 7.609 L 73.924 9.828 Z M 85.424 12.031 L 85.424 7.609 L 78.799 7.609 L 78.799 12.031 L 76.596 12.031 L 76.596 1.000 L 78.799 1.000 L 78.799 5.406 L 85.424 5.406 L 85.424 1.000 L 87.628 1.000 L 87.628 12.031 Z"/></svg> <a class="kofi" href="https://ko-fi.com/floslist" target="_blank" rel="noopener">☕ Unterstütze mich auf Ko-fi</a><span class="fuss-rechts" id="version"></span></footer>
-</div>
-
+<script src="oberflaeche.js"></script>
 <script>
-// Branding-Profil (branding/<name>/profil.json): Titel, Logo, Farben
-(async () => {
-  try {
-    const b = await (await fetch('/branding.json')).json();
-    document.title = b.titel + (document.title.includes('·') ? ' · ' + document.title.split('·').pop().trim() : '');
-    const t = document.getElementById('titel'); if (t) t.textContent = b.titel;
-    const l = document.getElementById('logo'); if (l) l.innerHTML = b.logo || '';
-    const css = (v) => Object.entries(v || {}).map(([k, w]) => `--${k}: ${w};`).join(' ');
-    const f = b.farben || {};
-    const s = document.createElement('style');
-    s.textContent = `:root { ${css(f.hell)} }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { ${css(f.dunkel)} } }
-:root[data-theme="dark"] { ${css(f.dunkel)} }`;
-    document.head.append(s);
-  } catch {}
-})();
-
 // Zustand kommt vom Talkback-Server (talkback.py), der mit dem Pult spricht. Gruppen und Mixe stehen in einstellungen.json.
 let Z = null, bearbeite = null, bauplan = '';
 const $ = (id) => document.getElementById(id);
@@ -124,36 +57,36 @@ const ZAHNRAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const alle = () => Z.ziele.map((_, i) => i);
 const gruppe = (name) => Z.gruppen.find((g) => g.name === name);
 const titel = (i) => Z.namen[i] || Z.ziele[i];
-const namen = (l) => l.length ? l.map(titel).join(', ') : 'noch niemand';
+const namen = (l) => l.length ? l.map(titel).join(', ') : t('noch_niemand');
 const hoeren = () => alle().filter((i) => Z.an[i]);
+const post = (pfad, daten = {}) => fetch(pfad, { method: 'POST', body: JSON.stringify(daten) }).catch(() => {});
 
 async function setzen(liste) {
   const an = alle().map((i) => liste.includes(i));
   Z.an = an; malen();
-  try { await fetch('/setzen', { method: 'POST', body: JSON.stringify({ an }) }); } catch {}
+  await post('/setzen', { an });
 }
 async function umschalten(name) {
   Z.gruppen_an[name] = !Z.gruppen_an[name]; malen();
-  try { await fetch('/gruppe', { method: 'POST', body: JSON.stringify({ name }) }); } catch {}
-}
-async function mixeSpeichern(g) {
-  try { await fetch('/gruppe-mixe', { method: 'POST', body: JSON.stringify({ name: g.name, indizes: g.indizes }) }); } catch {}
+  await post('/gruppe', { name });
 }
 
 function aufbauen() {
   $('gruppen').replaceChildren();
   $('mixe').replaceChildren();
-  if (!Z.gruppen.length) $('gruppen').innerHTML = '<p class="leer">Noch keine Gruppen. Unter „Einstellungen“ anlegen.</p>';
+  if (!Z.gruppen.length) { const p = document.createElement('p'); p.className = 'leise'; p.textContent = t('keine_gruppen'); $('gruppen').append(p); }
   for (const g of Z.gruppen) {
     const name = g.name;
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'gruppe'; b.dataset.name = name;
-    b.innerHTML = `<span></span><small></small>`; b.firstChild.textContent = name;
+    b.innerHTML = '<span class="name"></span><small></small><span class="led" aria-hidden="true"></span>';
+    b.querySelector('.name').textContent = name;
     b.onclick = () => { if (bearbeite) { if (!gruppe(name).rest) { bearbeite = name; malen(); } } else umschalten(name); };
     if (!g.rest) {
       // Zahnrad: festlegen, wer zu dieser Gruppe gehört
       const z = document.createElement('span');
-      z.className = 'zahnrad'; z.setAttribute('role', 'button'); z.tabIndex = 0; z.title = `${name} bearbeiten`; z.setAttribute('aria-label', `${name} bearbeiten`);
+      z.className = 'zahnrad'; z.setAttribute('role', 'button'); z.tabIndex = 0;
+      z.title = t('bearbeiten', { name }); z.setAttribute('aria-label', z.title);
       z.innerHTML = ZAHNRAD;
       const los = (e) => { e.stopPropagation(); bearbeite = bearbeite === name ? null : name; malen(); };
       z.addEventListener('click', los);
@@ -165,37 +98,40 @@ function aufbauen() {
   Z.ziele.forEach((ziel, i) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'mix'; b.id = `mix-${i}`;
-    b.innerHTML = `<span class="nr"></span><span class="name"></span>`;
+    b.innerHTML = '<span class="nr"></span><span class="name"></span><span class="led" aria-hidden="true"></span>';
     b.querySelector('.nr').textContent = ziel;
     b.onclick = () => {
       if (bearbeite) {
         const g = gruppe(bearbeite), k = g.indizes.indexOf(i);
         k < 0 ? g.indizes.push(i) : g.indizes.splice(k, 1); g.indizes.sort((a, c) => a - c);
-        mixeSpeichern(g); malen();
+        post('/gruppe-mixe', { name: g.name, indizes: g.indizes }); malen();
       } else {
-        // einzelnen Mix dazu- oder wegschalten
-        const h = hoeren(), k = h.indexOf(i);
+        const h = hoeren(), k = h.indexOf(i);   // einzelnen Mix dazu- oder wegschalten
         k < 0 ? h.push(i) : h.splice(k, 1); setzen(h);
       }
     };
     $('mixe').append(b);
   });
-  $('fertig').onclick = () => { bearbeite = null; malen(); };
-  $('updateKnopf').onclick = async () => {
-    $('updateKnopf').disabled = true; $('updateText').textContent = 'Installiere … das Tool startet gleich neu.';
-    try { await fetch('/update', { method: 'POST', body: '{}' }); } catch {}
-  };
-  $('aus').onclick = () => setzen([]);
 }
 
 function malen() {
-  const online = Z.verbunden, h = hoeren();
-  $('status').className = 'status' + (online ? ' ok' : '');
-  $('status').innerHTML = online ? 'Pult · <b>verbunden</b>' : `<b>Pult ${Z.pult_ip} nicht erreichbar</b> · IP unter Einstellungen prüfen`;
+  const online = Z.verbunden && !Z.pausiert, h = hoeren();
+  const st = $('status');
+  st.className = 'kapsel ' + (Z.pausiert ? 'warn' : Z.verbunden ? 'gut' : 'schlecht');
+  st.textContent = Z.pausiert ? t('pausiert') : Z.verbunden ? t('verbunden') : t('nicht_erreichbar', { ip: Z.pult_ip });
+  $('pause').textContent = Z.pausiert ? t('fortsetzen') : t('pause');
+  $('pause').className = Z.pausiert ? 'haupt' : '';
+  // Kasten mit roten Eckwinkeln: nur wenn wirklich etwas nicht geht
+  $('weg').hidden = Z.verbunden || Z.pausiert;
+  $('wegTitel').textContent = t('nicht_erreichbar', { ip: Z.pult_ip });
+  $('wegText').textContent = t('nicht_erreichbar_text');
+  $('wegKnopf').textContent = t('pult_suchen');
+  $('update').hidden = !Z.update || !!bearbeite;
+  if (Z.update && !$('updateKnopf').disabled) $('updateText').textContent = t('update_da', { v: Z.update.version }) + ' ' + (Z.auto_update ? t('update_nachts') : t('update_aus'));
   for (const b of $('gruppen').querySelectorAll('.gruppe')) {
     const g = gruppe(b.dataset.name);
-    const softkey = g.mutegruppe ? ` · Softkey MG ${g.mutegruppe}` : '';
-    b.querySelector('small').textContent = (g.rest ? 'alle übrigen' : namen(g.indizes)) + softkey;
+    const softkey = g.mutegruppe ? ' · ' + t('softkey_mg', { n: g.mutegruppe }) : '';
+    b.querySelector('small').textContent = (g.rest ? t('alle_uebrigen') : namen(g.indizes)) + softkey;
     b.setAttribute('aria-pressed', String(!bearbeite && online && !!Z.gruppen_an[g.name]));
     b.classList.toggle('bearbeitet', bearbeite === g.name);
     b.disabled = bearbeite ? g.rest : !online || g.indizes.length === 0;
@@ -204,23 +140,31 @@ function malen() {
   Z.ziele.forEach((_, i) => {
     const b = $(`mix-${i}`);
     b.querySelector('.name').textContent = Z.namen[i] || '–';
-    b.classList.toggle('hoert', !bearbeite && Z.an[i] === true);
-    b.classList.toggle('unbekannt', !bearbeite && Z.an[i] === null);
+    b.classList.toggle('unbekannt', !bearbeite && online && Z.an[i] === null);
     b.classList.toggle('drin', !!bearbeite && drin.includes(i));
     b.disabled = !bearbeite && !online;
-    b.setAttribute('aria-pressed', String(bearbeite ? drin.includes(i) : Z.an[i] === true));
+    b.setAttribute('aria-pressed', String(bearbeite ? drin.includes(i) : online && Z.an[i] === true));
   });
-  $('version').textContent = 'v' + Z.version;
-  $('update').hidden = !Z.update || !!bearbeite;
-  if (Z.update) $('updateText').textContent = `Neue Version ${Z.update.version} verfügbar.` + (Z.auto_update ? ' Wird nachts um 4 Uhr von selbst installiert.' : ' Automatische Updates sind aus.');
+  $('mixTitel').textContent = bearbeite ? t('mixe_bearbeiten', { name: bearbeite }) : t('mixe_titel');
+  $('mixHinweis').textContent = bearbeite ? t('mixe_bearbeiten_hinweis') : t('mixe_hinweis');
   $('aus').hidden = !!bearbeite;
   $('aus').disabled = !online || h.length === 0;
   $('fertig').hidden = !bearbeite;
-  $('mixLabel').textContent = bearbeite ? `Wer gehört zu ${bearbeite}? Antippen zum Hinzufügen oder Entfernen` : 'In-Ear-Mixe · rot = hört dich, wenn du die Taste am Mikro drückst · antippen schaltet einzeln';
-  $('hinweis').textContent = bearbeite
-    ? 'Mit dem Zahnrad an einer Gruppe wechselst du, welche du bearbeitest. Eine Gruppe „alle übrigen“ passt sich von selbst an.'
-    : 'Die Taste am Mikro schaltet das Sprechen. Diese Seite legt nur fest, wer es hört: Sie schaltet am Pult das Assign vom Talkback-Kanal auf die gewählten Mixe. Änderungen am Pult erscheinen hier von selbst.';
+  $('version').textContent = 'v' + Z.version;
 }
+
+$('fertig').onclick = () => { bearbeite = null; malen(); };
+$('aus').onclick = () => setzen([]);
+$('pause').onclick = async () => { Z.pausiert = !Z.pausiert; malen(); await post('/pause', { an: Z.pausiert }); };
+$('beenden').onclick = async () => {
+  if (!confirm(t('beenden_frage'))) return;
+  await post('/beenden');
+  document.body.innerHTML = `<main class="innen"><p class="ueber">${t('beendet_titel')}</p><p>${t('beendet_text')}</p></main>`;
+};
+$('updateKnopf').onclick = async () => {
+  $('updateKnopf').disabled = true; $('updateText').textContent = t('installiere');
+  await post('/update');
+};
 
 async function holen() {
   try {
@@ -232,9 +176,11 @@ async function holen() {
     if (plan !== bauplan) { bauplan = plan; if (bearbeite && !gruppe(bearbeite)) bearbeite = null; aufbauen(); }
     malen();
   } catch {
-    if (Z) { Z.verbunden = false; malen(); $('status').innerHTML = '<b>Talkback-Programm läuft nicht</b>'; }
+    if (Z) { $('status').className = 'kapsel schlecht'; $('status').textContent = t('programm_aus'); }
   }
   setTimeout(holen, 500);
 }
-holen();
+OBERFLAECHE.then(holen);
 </script>
+</body>
+</html>

@@ -84,8 +84,8 @@ Jedes Profil ist ein Ordner in `branding/` mit einer `profil.json` und optional 
   "titel": "Talkback",
   "logo": "logo.svg",
   "farben": {
-    "hell":   { "an": "#c2410c", "an-hell": "#ffedd5" },
-    "dunkel": { "an": "#fb923c", "an-hell": "#3b1d0c" }
+    "dunkel": { "akzent": "#ff8a1f" },
+    "hell":   { "akzent": "#c2410c" }
   }
 }
 ```
@@ -98,7 +98,7 @@ Das Profil wählst du unter Einstellungen → Aussehen. Eigene Profile landen ni
 - [x] Branding-Profile: Logo, Titel, Farben
 - [x] Updates von GitHub: Prüfung alle 6 Stunden, Installation um 4 Uhr nachts (nie im Gottesdienst) oder per Klick
 - [ ] **Weitere Pulte** über Treiber: dLive, SQ
-- [ ] **Englische Oberfläche**
+- [x] Englische Oberfläche
 - [ ] **Bedienung vom Handy oder Tablet** im lokalen Netz, abschaltbar
 
 ## Gut zu wissen

@@ -3,7 +3,7 @@
   "titel": "Talkback",
   "logo": "logo.svg",
   "farben": {
-    "hell": { "an": "#c2410c", "an-hell": "#ffedd5" },
-    "dunkel": { "an": "#fb923c", "an-hell": "#3b1d0c" }
+    "dunkel": { "akzent": "#ff8a1f" },
+    "hell": { "akzent": "#c2410c" }
   }
 }

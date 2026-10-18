@@ -7,7 +7,7 @@ import datetime, ipaddress, json, re, socket, sys, threading, time, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-VERSION = "0.4.0"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
+VERSION = "0.5.0"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
 WEB = 8787
 ORDNER = Path(__file__).resolve().parent
 EINSTELLUNGEN = ORDNER / "einstellungen.json"
@@ -18,7 +18,8 @@ TAG = b"\x01\xf4"
 STANDARD = {
     "branding": "standard",
     "auto_update": True,       # nachts um 4 Uhr installieren, nie während eines Gottesdienstes
-    "bewaehrt": "",            # IP, mit der schon einmal eine Verbindung stand (dann keine Auto-Suche mehr)
+    "pausiert": False,         # Pause: keine Verbindung zum Pult, bis jemand „Fortsetzen“ drückt
+    "sprache": "auto",         # auto (folgt dem Browser), de, en
     "pult_ip": "192.168.1.50",
     "talkback_kanal": 87,
     "midi_kanal": 12,          # MIDI-Basiskanal am Pult (Setup → Control → MIDI)
@@ -67,7 +68,8 @@ def branding():
         datei = (ordner / p["logo"]).resolve()
         if datei.parent == ordner.resolve() and datei.suffix == ".svg" and datei.exists():
             logo = datei.read_text()
-    return {"name": p.get("name", ""), "titel": p.get("titel", "Talkback"), "logo": logo, "farben": p.get("farben", {})}
+    return {"name": p.get("name", ""), "titel": p.get("titel", "Talkback"), "logo": logo, "farben": p.get("farben", {}),
+            "sprache": cfg.get("sprache", "auto")}
 
 
 def pruefen(cfg):
@@ -102,7 +104,9 @@ def pruefen(cfg):
         raise ValueError("jede Mute-Gruppe nur einmal vergeben")
     c["gruppen"] = gruppen
     c["auto_update"] = bool(c["auto_update"])
-    c["bewaehrt"] = str(c["bewaehrt"])
+    c["pausiert"] = bool(c["pausiert"])
+    if c["sprache"] not in ("auto", "de", "en"):
+        c["sprache"] = "auto"
     return c
 
 
@@ -189,6 +193,9 @@ def nativ():
     """Hält die Verbindung zum Pult, abonniert die Assigns und führt den Zustand."""
     while True:
         s = u = None
+        if cfg["pausiert"]:
+            time.sleep(1)
+            continue
         try:
             ip = cfg["pult_ip"]
             s = socket.create_connection((ip, 51321), timeout=5)
@@ -228,8 +235,6 @@ def nativ():
                         with lock:
                             pult["handle"] = h
                             zustand["verbunden"] = True
-                        if cfg["bewaehrt"] != ip:  # merken: diese IP ist das richtige Pult
-                            speichern(dict(cfg, bewaehrt=ip))
                     elif h and len(m) == 13 and m[3:7] == TAG + h:
                         with lock:
                             i = PARAM_ZU_ZIEL.get(int.from_bytes(m[7:9], "big"))
@@ -273,6 +278,9 @@ def udp_lebenszeichen():
 def midi():
     """Dauerverbindung MIDI/TCP: Mix-Namen (jede Minute) und die Mute-Gruppen der Softkeys."""
     while True:
+        if cfg["pausiert"]:
+            time.sleep(1)
+            continue
         try:
             s = socket.create_connection((cfg["pult_ip"], 51325), timeout=5)
             with lock:
@@ -408,7 +416,7 @@ def setzen(an):
 
 def speichern(neu):
     neu = pruefen(neu)
-    verbinden = any(neu[k] != cfg[k] for k in ("pult_ip", "talkback_kanal", "midi_kanal", "mono_aux_anzahl", "ziele"))
+    verbinden = any(neu[k] != cfg[k] for k in ("pult_ip", "talkback_kanal", "midi_kanal", "mono_aux_anzahl", "ziele", "pausiert"))
     EINSTELLUNGEN.write_text(json.dumps(neu, indent=2, ensure_ascii=False))
     anwenden(neu, verbinden)
 
@@ -423,7 +431,7 @@ def update_installieren(info):
     aktualisieren.neu_starten()
 
 
-PFLICHT = ["suche.py"]  # Module, die ältere Updater noch nicht kannten
+PFLICHT = ["suche.py", "stream.css", "talkback.css", "oberflaeche.js"]  # Module, die ältere Updater noch nicht kannten
 
 
 def update_wache():
@@ -460,24 +468,14 @@ def update_wache():
         time.sleep(300)
 
 
-# ---------- Pult suchen ----------
-
-def auto_suche():
-    """Ist das Pult 20 s nicht erreichbar und ruft genau ein Avantis im Netz, dessen IP übernehmen.
-    Nur bei Neuinstallationen: war die eingetragene IP schon einmal verbunden, wird nie umgeschaltet.
-    Nur Zuhören, kein Absuchen des Netzes."""
-    try:
-        import suche
-    except ImportError:
-        return
-    time.sleep(20)
-    while True:
-        if not zustand["verbunden"] and not cfg["bewaehrt"]:
-            pulte = [p for p in suche.zuhoeren().values() if "Avantis" in p["modell"]]
-            if len(pulte) == 1 and pulte[0]["ip"] != cfg["pult_ip"]:
-                print(time.strftime("%H:%M:%S"), "Pult gefunden, übernehme", pulte[0]["ip"], flush=True)
-                speichern(dict(cfg, pult_ip=pulte[0]["ip"]))
-        time.sleep(60)
+def beenden():
+    """Beendet das Tool. Als LaunchAgent wird der Dienst abgemeldet, sonst startet launchd es sofort neu.
+    Bei der nächsten Anmeldung startet es wieder."""
+    time.sleep(0.5)
+    import os, subprocess
+    if os.environ.get("XPC_SERVICE_NAME", "").endswith("talkback"):
+        subprocess.run(["/bin/launchctl", "bootout", f"gui/{os.getuid()}/{os.environ['XPC_SERVICE_NAME']}"])
+    os._exit(0)
 
 
 # ---------- Web ----------
@@ -499,6 +497,7 @@ class Web(BaseHTTPRequestHandler):
         if self.path == "/zustand":
             with lock:
                 z = dict(zustand, ziele=[z[1] for z in ZIELE], keys=[z[0] for z in ZIELE], auto_update=cfg["auto_update"], pult_ip=cfg["pult_ip"],
+                         pausiert=cfg["pausiert"],
                          gruppen=[dict(g, indizes=mixe_von(g["name"])) for g in cfg["gruppen"]])
             return self.antwort(json.dumps(z))
         if self.path == "/suche":
@@ -513,9 +512,10 @@ class Web(BaseHTTPRequestHandler):
             return self.antwort(json.dumps(branding()))
         datei = {"/": "index.html", "/einstellungen": "einstellungen.html"}.get(self.path, self.path.lstrip("/"))
         p = (ORDNER / datei).resolve()
-        if p.parent != ORDNER or p.suffix not in (".html", ".svg") or not p.exists():
+        typen = {".html": "text/html", ".svg": "image/svg+xml", ".css": "text/css", ".js": "text/javascript"}
+        if p.parent != ORDNER or p.suffix not in typen or p.name in ("talkback.py",) or not p.exists():
             return self.antwort("nicht gefunden", "text/plain", 404)
-        self.antwort(p.read_bytes(), "text/html" if p.suffix == ".html" else "image/svg+xml")
+        self.antwort(p.read_bytes(), typen[p.suffix])
 
     def do_POST(self):
         try:
@@ -537,6 +537,23 @@ class Web(BaseHTTPRequestHandler):
                     g["mixe"] = [ZIELE[i][0] for i in daten["indizes"] if 0 <= i < len(ZIELE)]
             speichern(neu)
             return self.antwort("true")
+        if self.path == "/pause":  # Knopf „Pause“ / „Fortsetzen“
+            speichern(dict(cfg, pausiert=bool(daten.get("an"))))
+            return self.antwort("true")
+        if self.path == "/beenden":  # Knopf „Beenden“: bis zur nächsten Anmeldung aus
+            self.antwort("true")
+            threading.Thread(target=beenden, daemon=True).start()
+            return
+        if self.path == "/update-pruefen":  # Knopf „Nach Updates suchen“
+            try:
+                import aktualisieren
+                v, url, text = aktualisieren.neueste()
+                neu = {"version": v, "url": url, "text": text[:2000]} if aktualisieren.version_tupel(v) > aktualisieren.version_tupel(VERSION) else None
+                with lock:
+                    zustand["update"] = neu
+                return self.antwort(json.dumps(neu))
+            except Exception as e:
+                return self.antwort(json.dumps(str(e)), code=502)
         if self.path == "/update":  # Knopf „jetzt installieren“
             info = zustand["update"]
             if not info:
@@ -565,7 +582,6 @@ if __name__ == "__main__":
     threading.Thread(target=midi, daemon=True).start()
     threading.Thread(target=led_abgleich, daemon=True).start()
     threading.Thread(target=update_wache, daemon=True).start()
-    threading.Thread(target=auto_suche, daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", WEB), Web)  # nur am Rechner selbst erreichbar
     print(f"Talkback läuft → http://localhost:{WEB}")
     marke = ORDNER / ".nach-update"

@@ -3,6 +3,24 @@
 Jede Version hat einen deutschen und einen englischen Teil. Die GitHub-Action nimmt den Abschnitt der neuen Version als Text für das Release.
 Each version has a German and an English part. The GitHub action uses the section of the new version as release text.
 
+## 0.5.0
+
+**Deutsch**
+- **Neues Design** in der Stream-Design-Sprache: Titelleiste mit rotem Balken, eckige Kästen, gut lesbare Schrift (Atkinson Hyperlegible). **Grün = hört dich**, passend zur grünen Softkey-LED am Pult. Hell und dunkel nach Systemeinstellung
+- **Englische Oberfläche:** Sprache automatisch nach Browser oder fest in den Einstellungen
+- **Pause und Beenden:** Pause trennt das Tool vom Pult, bis du „Fortsetzen“ drückst (bleibt auch nach einem Neustart). Beenden schaltet es bis zur nächsten Anmeldung aus
+- **Nach Updates suchen:** Knopf in den Einstellungen, mit Anzeige der installierten Version
+- **Entfernt:** Das automatische Verbinden mit einem unbekannten Pult. Das Pult wird nur noch über „Pult suchen“ gefunden und von Hand übernommen
+- Ist das Pult nicht erreichbar, erscheint oben ein deutlicher Hinweis mit Knopf zur Suche
+
+**English**
+- **New design:** title bar with red accent, square boxes, highly readable font (Atkinson Hyperlegible). **Green = hears you**, matching the green softkey LED on the desk. Light and dark follow the system
+- **English interface:** language follows the browser or can be set in the settings
+- **Pause and quit:** pause disconnects the tool from the desk until you press "Resume" (survives a restart). Quit turns it off until the next login
+- **Check for updates:** button in the settings, shows the installed version
+- **Removed:** automatically connecting to an unknown desk. The desk is only found with "Find desk" and taken by hand
+- If the desk can't be reached, a clear notice with a search button appears at the top
+
 ## 0.4.0
 
 **Deutsch**

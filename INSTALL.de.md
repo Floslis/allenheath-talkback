@@ -38,13 +38,12 @@ Dauert etwa 10 Minuten: 5 am Mac, 5 am Pult.
 Im Tool oben rechts auf **Einstellungen**:
 
 1. **Pult suchen** klicken. Das Tool lauscht auf das Pult und zeigt es mit Modell und Firmware an. Antippen übernimmt die IP
-   - Bei einer Neuinstallation passiert das nach 20 Sekunden auch von selbst, wenn genau ein Avantis im Netz ist
 2. **Talkback-Kanal** und **MIDI-Basiskanal** aus Schritt 1 eintragen
 3. **Mixe** wählen, die im Tool erscheinen sollen
 4. **Gruppen** anlegen: Name, Softkey (Mute-Gruppe) und welche Mixe dazugehören. Eine Gruppe kann **„alle übrigen“** sein, sie enthält dann jeden Mix, der in keiner anderen Gruppe steckt
 5. **Speichern**
 
-Oben auf der Hauptseite steht jetzt **„Pult · verbunden“**.
+Oben auf der Hauptseite steht jetzt **„Pult verbunden“**.
 
 ## 4. Testen
 

@@ -4,8 +4,6 @@
 
 Takes about 10 minutes: 5 on the Mac, 5 at the desk.
 
-> The interface is currently in German. Button names are given in German with a translation.
-
 ## What you need
 
 - A **Mac** on the **same network as the desk** (e.g. the tech laptop)
@@ -37,16 +35,15 @@ Takes about 10 minutes: 5 on the Mac, 5 at the desk.
 
 ## 3. Set up
 
-In the tool, click **Einstellungen** (settings) at the top right:
+In the tool, click **Settings** at the top right:
 
-1. Click **Pult suchen** (find desk). The tool listens for the desk and shows it with model and firmware. Tap it to take the IP
-   - On a fresh install this also happens by itself after 20 seconds if exactly one Avantis is on the network
-2. Enter the **Talkback-Kanal** (talkback channel) and **MIDI-Basiskanal** (MIDI base channel) from step 1
+1. Click **Find desk**. The tool listens for the desk and shows it with model and firmware. Tap it to take the IP
+2. Enter the **talkback channel** and **MIDI base channel** from step 1
 3. Choose the **mixes** that should appear in the tool
-4. Create **groups**: name, softkey (mute group) and which mixes belong to it. One group can be **"alle übrigen"** (all others), it then contains every mix that isn't in another group
-5. Click **Speichern** (save)
+4. Create **groups**: name, softkey (mute group) and which mixes belong to it. One group can be **"all others"**, it then contains every mix that isn't in another group
+5. Click **Save**
 
-The main page now shows **"Pult · verbunden"** (desk connected).
+The main page now shows **"Desk connected"**.
 
 ## 4. Test
 
@@ -58,14 +55,14 @@ The main page now shows **"Pult · verbunden"** (desk connected).
 
 ## Updates
 
-The tool checks GitHub every 6 hours and installs new versions **at 4 am**, so never during a service. If a blue banner appears at the top, you can also install right away. Settings and your own branding stay. Turn off: Einstellungen → Updates.
+The tool checks GitHub every 6 hours and installs new versions **at 4 am**, so never during a service. If a blue banner appears at the top, you can also install right away. Settings and your own branding stay. Turn off: Settings → Updates.
 
 ## Troubleshooting
 
 | Problem | Solution |
 |---|---|
 | Browser says "can't reach this page" | Is the folder in your home folder? Then run `Installieren.command` again. Errors are in `talkback.log` in the folder |
-| "Pult … nicht erreichbar" (desk not reachable) | Einstellungen → Pult suchen. Mac and desk must be on the same network |
+| "Desk … not reachable" | Settings → Find desk. Mac and desk must be on the same network |
 | Find desk finds nothing | Are Mac and desk on different networks (VLANs)? Then enter the IP by hand (Setup → Network on the desk) |
 | Softkey does nothing | Network MIDI on? Base channel correct? Mute group entered in the settings? |
 | Folder moved | Run `Installieren.command` again in the new place |
