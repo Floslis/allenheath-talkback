@@ -130,6 +130,11 @@ Das Profil wählst du unter Einstellungen → Aussehen. Eigene Profile landen ni
 - Das Tool lauscht nur auf dem eigenen Rechner (`127.0.0.1`), nicht im Netz
 - Kein offizielles Produkt von Allen & Heath und nicht mit Allen & Heath verbunden
 
+## Verwandte Projekte
+
+- **[avantis-protocol](https://github.com/Floslis/avantis-protocol)**: das Netzwerkprotokoll hinter diesem Tool, dokumentiert für alle, die selbst etwas bauen wollen
+- **[companion-module-allenheath-avantis-assign](https://github.com/Floslis/companion-module-allenheath-avantis-assign)**: Assign schalten mit Bitfocus Companion und Stream Deck (in Entwicklung)
+
 ## Unterstützen
 
 Dir hilft das Tool? Über einen Kaffee freue ich mich sehr. ☕

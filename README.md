@@ -36,6 +36,11 @@ But we still want to decide **who hears us**, mix by mix. And the desk has no so
 | 🎨 **Branding** | Your own logo, title and colours per venue, from a profile folder |
 | 🚀 **Runs by itself** | Starts at login and restarts after a crash. Only needs Python 3, no extra packages |
 
+## Related projects
+
+- **[avantis-protocol](https://github.com/Floslis/avantis-protocol)**: the network protocol behind this tool, documented for anyone who wants to build their own
+- **[companion-module-allenheath-avantis-assign](https://github.com/Floslis/companion-module-allenheath-avantis-assign)**: assign switching for Bitfocus Companion and Stream Deck (in development)
+
 ## Supported desks
 
 | Desk | Firmware | Status |
