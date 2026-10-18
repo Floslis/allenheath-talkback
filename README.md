@@ -143,4 +143,4 @@ Does this tool help you? I'd be very happy about a coffee. ☕
 
 ## License
 
-[MIT](LICENSE) · A project by **FLOTECH**, event technology and film
+[AGPL-3.0](LICENSE): free to use, change and share. Anyone who distributes it or offers it as a web service must publish their source code under the same license. © 2026 Florian Hogrebe. Versions up to 0.6.1 were released under MIT. · A project by **FLOTECH**, event technology and film

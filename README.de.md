@@ -143,4 +143,4 @@ Dir hilft das Tool? Über einen Kaffee freue ich mich sehr. ☕
 
 ## Lizenz
 
-[MIT](LICENSE) · Ein Projekt von **FLOTECH**, Veranstaltungstechnik und Film
+[AGPL-3.0](LICENSE): frei nutzen, ändern und weitergeben. Wer es weitergibt oder als Webdienst anbietet, muss seinen Quellcode unter derselben Lizenz offenlegen. © 2026 Florian Hogrebe. Versionen bis 0.6.1 erschienen unter MIT. · Ein Projekt von **FLOTECH**, Veranstaltungstechnik und Film
