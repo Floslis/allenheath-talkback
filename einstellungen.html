@@ -40,7 +40,6 @@
         <button type="button" id="suchen" data-t="pult_suchen"></button></div>
       <label class="feld"><span data-t="tb_kanal"></span><small data-t="tb_kanal_klein"></small><input type="number" id="talkback_kanal" min="1" max="128"></label>
       <label class="feld"><span data-t="midi_kanal"></span><small data-t="midi_kanal_klein"></small><input type="number" id="midi_kanal" min="1" max="12"></label>
-      <label class="feld"><span data-t="mono_aux"></span><small data-t="mono_aux_klein"></small><input type="number" id="mono_aux_anzahl" min="0" max="24"></label>
     </div>
     <p class="hinweis" id="sucheText" style="margin:12px 0 8px" hidden></p>
     <div class="chips" id="treffer"></div>
@@ -68,8 +67,8 @@
 const $ = (id) => document.getElementById(id);
 const ALLE = [...Array(24)].map((_, i) => `aux${i + 1}`).concat([...Array(12)].map((_, i) => `staux${i + 1}`));
 const titel = (k) => k.startsWith('st') ? `StAux ${k.slice(5)}` : `Aux ${k.slice(3)}`;
-const FELDER = ['pult_ip', 'talkback_kanal', 'midi_kanal', 'mono_aux_anzahl'];
-let cfg, namen = {};
+const FELDER = ['pult_ip', 'talkback_kanal', 'midi_kanal'];
+let cfg, namen = {}, vorhanden = null;  // vorhanden: Mixe, die das Pult wirklich hat (null = noch unbekannt)
 
 function chip(text, klein, an, onchange) {
   const l = document.createElement('label');
@@ -95,7 +94,8 @@ function malen() {
   $('sprache').value = cfg.sprache;
   $('auto_update').checked = cfg.auto_update;
   for (const f of FELDER) $(f).value = cfg[f];
-  $('ziele').replaceChildren(...ALLE.map((k) => chip(titel(k), namen[k], cfg.ziele.includes(k), (an) => {
+  const zeigen = ALLE.filter((k) => !vorhanden || k in vorhanden || cfg.ziele.includes(k));
+  $('ziele').replaceChildren(...zeigen.map((k) => chip(titel(k), namen[k], cfg.ziele.includes(k), (an) => {
     cfg.ziele = an ? ALLE.filter((x) => x === k || cfg.ziele.includes(x)) : cfg.ziele.filter((x) => x !== k);
     for (const g of cfg.gruppen) g.mixe = g.mixe.filter((m) => cfg.ziele.includes(m));
     malen();
@@ -190,6 +190,7 @@ OBERFLAECHE.then(async () => {
   try {
     const z = await (await fetch('/zustand')).json();
     z.keys.forEach((k, i) => { if (z.namen[i]) namen[k] = z.namen[i]; });
+    if (Object.keys(z.vorhanden || {}).length) { vorhanden = z.vorhanden; Object.assign(namen, z.vorhanden); }
     $('version').textContent = t('version_ist', { v: z.version });
   } catch {}
   malen();

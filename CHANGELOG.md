@@ -3,6 +3,16 @@
 Jede Version hat einen deutschen und einen englischen Teil. Die GitHub-Action nimmt den Abschnitt der neuen Version als Text für das Release.
 Each version has a German and an English part. The GitHub action uses the section of the new version as release text.
 
+## 0.6.0
+
+**Deutsch**
+- **Mixe erkennt das Tool selbst:** Es fragt das Pult nach allen Mixen, nur vorhandene antworten. Die Zahl der Mono-Aux muss niemand mehr eintragen
+- In den Einstellungen erscheinen nur noch Mixe, die es am Pult wirklich gibt, mit ihren Namen
+
+**English**
+- **The tool detects the mixes by itself:** it asks the desk for all mixes, only existing ones answer. Nobody has to enter the number of mono auxes anymore
+- The settings only show mixes that really exist on the desk, with their names
+
 ## 0.5.1
 
 **Deutsch**

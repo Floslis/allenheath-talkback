@@ -7,7 +7,7 @@ import datetime, ipaddress, json, re, socket, sys, threading, time, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-VERSION = "0.5.1"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
+VERSION = "0.6.0"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
 WEB = 8787
 ORDNER = Path(__file__).resolve().parent
 EINSTELLUNGEN = ORDNER / "einstellungen.json"
@@ -132,7 +132,9 @@ def laden():
 
 cfg = laden()
 ZIELE, PARAM_ZU_ZIEL = [], {}
-zustand = {"verbunden": False, "an": [], "namen": [], "gruppen_an": {}, "version": VERSION, "update": None}
+zustand = {"verbunden": False, "an": [], "namen": [], "gruppen_an": {}, "version": VERSION, "update": None,
+           "vorhanden": {}}  # alle Mixe, die das Pult hat: key → Name (aus den Namensabfragen)
+ALLE_MIXE = [(f"aux{i}", i - 1) for i in range(1, 25)] + [(f"staux{i}", 0x40 + i - 1) for i in range(1, 13)]
 mg_stand = {}
 lock = threading.Lock()
 pult = {"sock": None, "handle": None, "udp": None, "midi": None}
@@ -289,9 +291,12 @@ def midi():
             buf, naechste, lauf = bytearray(), 0, None
             while True:
                 if time.time() > naechste:
-                    for z in list(ZIELE):
-                        s.sendall(bytes([0xF0, 0, 0, 0x1A, 0x50, 0x10, 1, 0, midi_basis() + 2, 0x01, z[3], 0xF7]))
+                    # alle möglichen Mixe abfragen: nur die vorhandenen antworten, so zählt das Tool sie selbst
+                    gefragt = time.time()
+                    for _, nr in ALLE_MIXE:
+                        s.sendall(bytes([0xF0, 0, 0, 0x1A, 0x50, 0x10, 1, 0, midi_basis() + 2, 0x01, nr, 0xF7]))
                     naechste = time.time() + 60
+                    threading.Timer(3, mixe_auswerten, args=(gefragt,)).start()
                 try:
                     d = s.recv(4096)
                 except socket.timeout:
@@ -320,16 +325,34 @@ def midi():
         time.sleep(3)
 
 
+def mixe_auswerten(seit):
+    """Nach einer Abfragerunde: welche Mixe gibt es, wie viele Mono-Aux? Stimmt die Zahl nicht, umstellen."""
+    with lock:
+        frisch = {nr: name for nr, (name, t) in antworten.items() if t >= seit}
+        if not frisch:
+            return  # keine Antwort (Pult weg), nichts ändern
+        zustand["vorhanden"] = {k: frisch[nr] for k, nr in ALLE_MIXE if nr in frisch}
+        mono = sum(1 for nr in frisch if nr < 0x40)
+    if mono != cfg["mono_aux_anzahl"]:
+        print(time.strftime("%H:%M:%S"), f"Pult hat {mono} Mono-Aux, stelle um", flush=True)
+        speichern(dict(cfg, mono_aux_anzahl=mono))
+
+
 def mutegruppe_note(nr):
     return 0x45 + nr  # Mute-Gruppe 1 = 0x46
 
 
+antworten = {}  # MIDI-Nummer → (Name, Zeit) der letzten Namensantworten
+
+
 def midi_nachricht(m):
     if m[0] == 0xF0 and len(m) > 11 and m[9] == 0x02:  # Name
+        name = m[11:-1].split(b"\x00")[0].decode("latin1").strip()
         with lock:
+            antworten[m[10]] = (name, time.time())
             for i, z in enumerate(ZIELE):
                 if m[10] == z[3]:
-                    zustand["namen"][i] = m[11:-1].split(b"\x00")[0].decode("latin1").strip()
+                    zustand["namen"][i] = name
     # Mute-Gruppen: Note On auf Kanal Basis+4, 7F = gemutet, 3F = nicht gemutet (danach ein 00 als Abschluss)
     elif m[0] == 0x90 | (midi_basis() + 4) and m[2] in (0x7F, 0x3F):
         for g in cfg["gruppen"]:
@@ -497,7 +520,7 @@ class Web(BaseHTTPRequestHandler):
         if self.path == "/zustand":
             with lock:
                 z = dict(zustand, ziele=[z[1] for z in ZIELE], keys=[z[0] for z in ZIELE], auto_update=cfg["auto_update"], pult_ip=cfg["pult_ip"],
-                         pausiert=cfg["pausiert"],
+                         pausiert=cfg["pausiert"], mono_aux_anzahl=cfg["mono_aux_anzahl"],
                          gruppen=[dict(g, indizes=mixe_von(g["name"])) for g in cfg["gruppen"]])
             return self.antwort(json.dumps(z))
         if self.path == "/suche":
