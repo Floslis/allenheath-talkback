@@ -46,6 +46,8 @@ But we still want to decide **who hears us**, mix by mix. And the desk has no so
 
 More desks will come as separate drivers. Have a desk and want to help? Open an issue.
 
+> 🙋 **Got a dLive in or around Berlin?** I'd love to spend half a day with one to build the driver. [Get in touch here](https://github.com/Floslis/avantis-talkback/issues/1).
+
 ## How it works
 
 ```mermaid
