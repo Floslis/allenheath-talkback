@@ -3,10 +3,11 @@
 Natives Protokoll (TCP 51321 + UDP) für Assign und Zustand, MIDI/TCP (51325) für Namen und Mute-Gruppen.
 Einstellungen in einstellungen.json, änderbar unter http://localhost:8787/einstellungen
 Start: python3 talkback.py  → http://localhost:8787"""
-import ipaddress, json, re, socket, threading, time, webbrowser
+import datetime, ipaddress, json, re, socket, sys, threading, time, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+VERSION = "0.3.0"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
 WEB = 8787
 ORDNER = Path(__file__).resolve().parent
 EINSTELLUNGEN = ORDNER / "einstellungen.json"
@@ -16,6 +17,7 @@ TAG = b"\x01\xf4"
 
 STANDARD = {
     "branding": "standard",
+    "auto_update": True,       # nachts um 4 Uhr installieren, nie während eines Gottesdienstes
     "pult_ip": "192.168.1.50",
     "talkback_kanal": 87,
     "midi_kanal": 12,          # MIDI-Basiskanal am Pult (Setup → Control → MIDI)
@@ -98,6 +100,7 @@ def pruefen(cfg):
     if len(mgs) != len(set(mgs)):
         raise ValueError("jede Mute-Gruppe nur einmal vergeben")
     c["gruppen"] = gruppen
+    c["auto_update"] = bool(c["auto_update"])
     return c
 
 
@@ -123,7 +126,7 @@ def laden():
 
 cfg = laden()
 ZIELE, PARAM_ZU_ZIEL = [], {}
-zustand = {"verbunden": False, "an": [], "namen": [], "gruppen_an": {}}
+zustand = {"verbunden": False, "an": [], "namen": [], "gruppen_an": {}, "version": VERSION, "update": None}
 mg_stand = {}
 lock = threading.Lock()
 pult = {"sock": None, "handle": None, "udp": None, "midi": None}
@@ -399,6 +402,41 @@ def speichern(neu):
     anwenden(neu, verbinden)
 
 
+# ---------- Updates ----------
+
+def update_installieren(info):
+    import aktualisieren
+    print(time.strftime("%H:%M:%S"), "installiere Version", info["version"], flush=True)
+    aktualisieren.installieren(info["url"])
+    (ORDNER / ".nach-update").write_text(info["version"])  # nach dem Neustart keinen Browser öffnen
+    aktualisieren.neu_starten()
+
+
+def update_wache():
+    """Prüft alle 6 h auf ein neues Release. Automatisch installiert wird nur zwischen 4 und 5 Uhr."""
+    import aktualisieren
+    naechste = 0
+    while True:
+        if time.time() > naechste:
+            try:
+                v, url, text = aktualisieren.neueste()
+                neu = {"version": v, "url": url, "text": text[:2000]} if aktualisieren.version_tupel(v) > aktualisieren.version_tupel(VERSION) else None
+                with lock:
+                    zustand["update"] = neu
+                naechste = time.time() + 6 * 3600
+            except Exception as e:  # offline, GitHub nicht erreichbar … später nochmal
+                print(time.strftime("%H:%M:%S"), "Update-Prüfung fehlgeschlagen:", repr(e), flush=True)
+                naechste = time.time() + 1800
+        info = zustand["update"]
+        if info and cfg["auto_update"] and datetime.datetime.now().hour == 4:
+            try:
+                update_installieren(info)
+            except Exception as e:
+                print(time.strftime("%H:%M:%S"), "Update fehlgeschlagen, alte Fassung läuft weiter:", repr(e), flush=True)
+                naechste, zustand["update"] = time.time() + 6 * 3600, None
+        time.sleep(300)
+
+
 # ---------- Web ----------
 
 class Web(BaseHTTPRequestHandler):
@@ -417,7 +455,7 @@ class Web(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/zustand":
             with lock:
-                z = dict(zustand, ziele=[z[1] for z in ZIELE], keys=[z[0] for z in ZIELE],
+                z = dict(zustand, ziele=[z[1] for z in ZIELE], keys=[z[0] for z in ZIELE], auto_update=cfg["auto_update"],
                          gruppen=[dict(g, indizes=mixe_von(g["name"])) for g in cfg["gruppen"]])
             return self.antwort(json.dumps(z))
         if self.path == "/einstellungen.json":
@@ -450,6 +488,18 @@ class Web(BaseHTTPRequestHandler):
                     g["mixe"] = [ZIELE[i][0] for i in daten["indizes"] if 0 <= i < len(ZIELE)]
             speichern(neu)
             return self.antwort("true")
+        if self.path == "/update":  # Knopf „jetzt installieren“
+            info = zustand["update"]
+            if not info:
+                return self.antwort('"kein Update verfügbar"', code=400)
+            self.antwort("true")
+            def los():
+                try:
+                    update_installieren(info)
+                except Exception as e:
+                    print(time.strftime("%H:%M:%S"), "Update fehlgeschlagen, alte Fassung läuft weiter:", repr(e), flush=True)
+            threading.Thread(target=los, daemon=True).start()
+            return
         if self.path == "/einstellungen":
             try:
                 speichern(daten)
@@ -465,7 +515,12 @@ if __name__ == "__main__":
     threading.Thread(target=udp_lebenszeichen, daemon=True).start()
     threading.Thread(target=midi, daemon=True).start()
     threading.Thread(target=led_abgleich, daemon=True).start()
+    threading.Thread(target=update_wache, daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", WEB), Web)  # nur am Rechner selbst erreichbar
     print(f"Talkback läuft → http://localhost:{WEB}")
-    threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{WEB}")).start()
+    marke = ORDNER / ".nach-update"
+    if marke.exists() or "--kein-browser" in sys.argv:
+        marke.unlink(missing_ok=True)
+    else:
+        threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{WEB}")).start()
     server.serve_forever()

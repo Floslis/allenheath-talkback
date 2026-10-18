@@ -1,0 +1,24 @@
+# Erhöht jemand VERSION in talkback.py, entsteht hier automatisch ein Release.
+# Die installierten Tools sehen es beim nächsten Prüfen und installieren es nachts.
+name: Release
+on:
+  push:
+    branches: [main]
+    paths: [talkback.py]
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release für neue Version anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(grep -oP '^VERSION = "\K[^"]+' talkback.py)
+          if gh release view "v$V" >/dev/null 2>&1; then
+            echo "v$V gibt es schon"
+          else
+            gh release create "v$V" --title "v$V" --generate-notes
+          fi

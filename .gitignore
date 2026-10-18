@@ -8,3 +8,5 @@ branding/*
 !branding/standard/
 !branding/beispiel/
 mockup.html
+.sicherung/
+.nach-update

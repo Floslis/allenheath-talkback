@@ -57,6 +57,12 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   </section>
 
   <section>
+    <h2>Updates</h2>
+    <label class="chip"><input type="checkbox" id="auto_update"> Neue Versionen nachts um 4 Uhr automatisch installieren</label>
+    <p class="hinweis">Einstellungen und eigenes Branding bleiben bei Updates erhalten. Das Tool prüft alle 6 Stunden auf GitHub, ob es eine neue Version gibt.</p>
+  </section>
+
+  <section>
     <h2>Pult</h2>
     <div class="felder">
       <label class="feld">IP-Adresse des Pults<input type="text" id="pult_ip" inputmode="decimal"></label>
@@ -122,6 +128,7 @@ function chip(text, klein, an, onchange, typ = 'checkbox', gruppe) {
 function malen() {
   $('branding').replaceChildren(...Object.entries(cfg.profile).map(([k, n]) => new Option(n, k)));
   $('branding').value = cfg.branding;
+  $('auto_update').checked = cfg.auto_update;
   for (const f of ['pult_ip', 'talkback_kanal', 'midi_kanal', 'mono_aux_anzahl']) $(f).value = cfg[f];
   $('ziele').replaceChildren(...ALLE.map((k) => chip(titel(k), namen[k], cfg.ziele.includes(k), (an) => {
     cfg.ziele = an ? ALLE.filter((x) => x === k || cfg.ziele.includes(x)) : cfg.ziele.filter((x) => x !== k);
@@ -171,6 +178,7 @@ $('branding').onchange = () => { cfg.branding = $('branding').value; };
 $('neu').onclick = () => { cfg.gruppen.push({ name: `Gruppe ${cfg.gruppen.length + 1}`, rest: false, mixe: [], mutegruppe: null }); malen(); };
 $('speichern').onclick = async () => {
   cfg.branding = $('branding').value;
+  cfg.auto_update = $('auto_update').checked;
   for (const f of ['pult_ip', 'talkback_kanal', 'midi_kanal', 'mono_aux_anzahl']) cfg[f] = f === 'pult_ip' ? $(f).value.trim() : +$(f).value;
   const r = await fetch('/einstellungen', { method: 'POST', body: JSON.stringify(cfg) });
   const ok = r.ok;
