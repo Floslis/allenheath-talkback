@@ -7,7 +7,7 @@ import datetime, ipaddress, json, re, socket, sys, threading, time, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-VERSION = "0.3.0"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
+VERSION = "0.3.1"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
 WEB = 8787
 ORDNER = Path(__file__).resolve().parent
 EINSTELLUNGEN = ORDNER / "einstellungen.json"

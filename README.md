@@ -83,6 +83,10 @@ Uninstall: `Deinstallieren.command`
 
 <p align="center"><img src="docs/einstellungen.png" alt="Settings page" width="70%"></p>
 
+## Updates
+
+The tool checks GitHub every 6 hours. New versions install themselves **at 4 am**, so it never restarts during a service, or right away with the button in the banner. Only code files are replaced, your settings and own branding profiles stay. The previous version is kept in `.sicherung/`. Automatic updates can be turned off in the settings.
+
 ## Branding
 
 Each profile is a folder in `branding/` with a `profil.json` and an optional `logo.svg`:
@@ -105,7 +109,7 @@ Choose the profile under Einstellungen → Aussehen. Your own profiles are not t
 
 - [x] Settings in the tool: desk IP, channel, mixes, any number of groups
 - [x] Branding profiles: logo, title, colours
-- [ ] **Updates from GitHub:** the tool checks for new versions and updates itself
+- [x] Updates from GitHub: checks every 6 hours, installs at 4 am (never during a service) or with one click
 - [ ] **More desks** via drivers: dLive, SQ
 - [ ] **English interface**
 - [ ] **Control from phone or tablet** on the local network, optional

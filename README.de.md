@@ -81,6 +81,10 @@ Wieder entfernen: `Deinstallieren.command`
 
 <p align="center"><img src="docs/einstellungen.png" alt="Einstellungsseite" width="70%"></p>
 
+## Updates
+
+Das Tool schaut alle 6 Stunden auf GitHub nach. Neue Versionen installieren sich **um 4 Uhr nachts** von selbst, so startet es nie mitten im Gottesdienst neu, oder sofort per Knopf im Hinweis. Getauscht werden nur Code-Dateien, deine Einstellungen und eigenen Branding-Profile bleiben. Die vorige Fassung liegt in `.sicherung/`. Automatische Updates lassen sich in den Einstellungen abschalten.
+
 ## Branding
 
 Jedes Profil ist ein Ordner in `branding/` mit einer `profil.json` und optional einer `logo.svg`:
@@ -103,7 +107,7 @@ Das Profil wählst du unter Einstellungen → Aussehen. Eigene Profile landen ni
 
 - [x] Einstellungen im Tool: Pult-IP, Kanal, Mixe, beliebig viele Gruppen
 - [x] Branding-Profile: Logo, Titel, Farben
-- [ ] **Updates von GitHub:** das Tool prüft selbst auf neue Versionen und aktualisiert sich
+- [x] Updates von GitHub: Prüfung alle 6 Stunden, Installation um 4 Uhr nachts (nie im Gottesdienst) oder per Klick
 - [ ] **Weitere Pulte** über Treiber: dLive, SQ
 - [ ] **Englische Oberfläche**
 - [ ] **Bedienung vom Handy oder Tablet** im lokalen Netz, abschaltbar
