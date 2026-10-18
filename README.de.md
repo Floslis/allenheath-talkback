@@ -46,6 +46,8 @@ Trotzdem wollen wir **einzeln steuern, wer uns hört**. Und das Pult hat keinen 
 
 Weitere Pulte kommen als eigene Treiber dazu. Du hast ein Pult und willst helfen? Mach ein Issue auf.
 
+> 🙋 **Du hast ein dLive in oder um Berlin?** Ich würde gern einen halben Tag daran, um den Treiber zu bauen. [Melde dich hier](https://github.com/Floslis/avantis-talkback/issues/1).
+
 ## So funktioniert es
 
 ```mermaid
