@@ -32,6 +32,7 @@ Trotzdem wollen wir **einzeln steuern, wer uns hört**. Und das Pult hat keinen 
 | 👥 **Gruppen** | Beliebig viele, jede mit eigenem Namen und eigenen Mixen. Eine Gruppe kann „alle übrigen“ sein (z. B. Band). Mehrere gleichzeitig möglich |
 | 🎛️ **Softkeys mit LED** | Softkeys am Pult schalten die Gruppen. Die LED leuchtet grün, wenn die Gruppe an ist, egal wo geschaltet wurde |
 | ⚙️ **Einstellungsseite** | Pult-IP, Talkback-Kanal, Mixe und Gruppen, alles im Browser änderbar |
+| 🔍 **Findet das Pult** | Lauscht im Netz auf das Pult und zeigt Modell und Firmware. Keine IP-Adressen abtippen |
 | 🎨 **Branding** | Eigenes Logo, eigener Titel und eigene Farben pro Gemeinde oder Veranstaltungsort, aus einem Profil-Ordner |
 | 🚀 **Läuft von selbst** | Startet bei der Anmeldung und nach einem Absturz neu. Nur Python 3, keine weiteren Pakete |
 
@@ -61,23 +62,11 @@ flowchart LR
 
 ## Installation
 
-**Voraussetzungen:** ein Mac im selben Netz wie das Pult, Python 3 (fehlt es, bietet macOS die Installation an)
+1. **[Talkback.zip herunterladen](https://github.com/Floslis/avantis-talkback/releases/latest/download/Talkback.zip)**, immer die neueste Version
+2. Den Ordner `Talkback` **direkt in den Benutzerordner** legen, Rechtsklick auf `Installieren.command` → Öffnen
+3. Im Tool **Einstellungen** → **Pult suchen**
 
-1. [Neueste Version herunterladen](../../archive/refs/heads/main.zip) und entpacken
-2. Den Ordner **direkt in deinen Benutzerordner** legen
-   > ⚠️ Nicht auf den Schreibtisch, in „Dokumente“ oder „Downloads“. Dort darf ein Autostart-Dienst unter macOS keine Dateien lesen, und das Tool startet nicht. Das Installationsskript prüft das und warnt dich
-3. **Rechtsklick auf `Installieren.command` → Öffnen**
-4. Der Browser öffnet sich mit http://localhost:8787. Oben steht „Pult · verbunden“
-
-Nur mal ausprobieren, ohne Autostart: `python3 talkback.py`
-Wieder entfernen: `Deinstallieren.command`
-
-## Einrichtung am Pult
-
-1. Das **Talkback-Mikro** auf einen freien Eingangskanal legen, Assign auf die In-Ear-Mixe muss möglich sein
-2. **Netzwerk-MIDI** einschalten: Setup → Control → MIDI, Basiskanal merken (Standard 12)
-3. Pro Gruppe **eine leere Mute-Gruppe** wählen und je einen **Softkey** darauf legen
-4. Im Tool **Einstellungen** öffnen und Pult-IP, Talkback-Kanal, Mixe und Gruppen eintragen
+**📖 Schritt für Schritt, mit Einrichtung am Pult und Hilfe bei Problemen: [INSTALL.de.md](INSTALL.de.md)**
 
 <p align="center"><img src="docs/einstellungen.png" alt="Einstellungsseite" width="70%"></p>
 

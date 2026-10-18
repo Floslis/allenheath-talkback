@@ -7,7 +7,7 @@ import datetime, ipaddress, json, re, socket, sys, threading, time, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-VERSION = "0.3.2"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
+VERSION = "0.4.0"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
 WEB = 8787
 ORDNER = Path(__file__).resolve().parent
 EINSTELLUNGEN = ORDNER / "einstellungen.json"
@@ -18,6 +18,7 @@ TAG = b"\x01\xf4"
 STANDARD = {
     "branding": "standard",
     "auto_update": True,       # nachts um 4 Uhr installieren, nie während eines Gottesdienstes
+    "bewaehrt": "",            # IP, mit der schon einmal eine Verbindung stand (dann keine Auto-Suche mehr)
     "pult_ip": "192.168.1.50",
     "talkback_kanal": 87,
     "midi_kanal": 12,          # MIDI-Basiskanal am Pult (Setup → Control → MIDI)
@@ -101,6 +102,7 @@ def pruefen(cfg):
         raise ValueError("jede Mute-Gruppe nur einmal vergeben")
     c["gruppen"] = gruppen
     c["auto_update"] = bool(c["auto_update"])
+    c["bewaehrt"] = str(c["bewaehrt"])
     return c
 
 
@@ -139,9 +141,16 @@ def anwenden(neu, neu_verbinden):
         cfg = neu
         ZIELE = [(k,) + ziel_info(k, cfg) for k in cfg["ziele"]]  # (key, Anzeige, Slot, MIDI-Nr)
         PARAM_ZU_ZIEL = {param(z[2]): i for i, z in enumerate(ZIELE)}
-        zustand.update(an=[None] * len(ZIELE), namen=[""] * len(ZIELE),
-                       gruppen_an={g["name"]: False for g in cfg["gruppen"]})
-        mg_stand.clear()
+        if neu_verbinden or len(zustand["an"]) != len(ZIELE):
+            # neue Verbindung → das Pult schickt beim Abonnieren alles neu
+            zustand.update(an=[None] * len(ZIELE), namen=[""] * len(ZIELE))
+            mg_stand.clear()
+        # sonst den bekannten Zustand behalten: das Pult meldet nur Änderungen, nicht den Stand nochmal
+        alt = zustand["gruppen_an"]
+        zustand["gruppen_an"] = {g["name"]: alt.get(g["name"], False) for g in cfg["gruppen"]}
+        for name in list(mg_stand):
+            if name not in zustand["gruppen_an"]:
+                del mg_stand[name]
         socks = [pult["sock"], pult["midi"]]
     if neu_verbinden:
         for s in socks:  # die Threads merken das und verbinden sich neu
@@ -219,6 +228,8 @@ def nativ():
                         with lock:
                             pult["handle"] = h
                             zustand["verbunden"] = True
+                        if cfg["bewaehrt"] != ip:  # merken: diese IP ist das richtige Pult
+                            speichern(dict(cfg, bewaehrt=ip))
                     elif h and len(m) == 13 and m[3:7] == TAG + h:
                         with lock:
                             i = PARAM_ZU_ZIEL.get(int.from_bytes(m[7:9], "big"))
@@ -412,10 +423,22 @@ def update_installieren(info):
     aktualisieren.neu_starten()
 
 
+PFLICHT = ["suche.py"]  # Module, die ältere Updater noch nicht kannten
+
+
 def update_wache():
     """Prüft alle 6 h auf ein neues Release. Automatisch installiert wird nur zwischen 4 und 5 Uhr."""
     import aktualisieren
     naechste = 0
+    # Selbstreparatur: hat ein älterer Updater eine neue Datei nicht mitgebracht, das Release nochmal holen
+    marke = ORDNER / f".reparatur-{VERSION}"  # höchstens ein Versuch pro Version, keine Neustart-Schleife
+    if any(not (ORDNER / d).exists() for d in PFLICHT) and not marke.exists():
+        marke.write_text("1")
+        try:
+            v, url, _ = aktualisieren.neueste()
+            update_installieren({"version": v, "url": url})
+        except Exception as e:
+            print(time.strftime("%H:%M:%S"), "Selbstreparatur fehlgeschlagen:", repr(e), flush=True)
     while True:
         if time.time() > naechste:
             try:
@@ -435,6 +458,26 @@ def update_wache():
                 print(time.strftime("%H:%M:%S"), "Update fehlgeschlagen, alte Fassung läuft weiter:", repr(e), flush=True)
                 naechste, zustand["update"] = time.time() + 6 * 3600, None
         time.sleep(300)
+
+
+# ---------- Pult suchen ----------
+
+def auto_suche():
+    """Ist das Pult 20 s nicht erreichbar und ruft genau ein Avantis im Netz, dessen IP übernehmen.
+    Nur bei Neuinstallationen: war die eingetragene IP schon einmal verbunden, wird nie umgeschaltet.
+    Nur Zuhören, kein Absuchen des Netzes."""
+    try:
+        import suche
+    except ImportError:
+        return
+    time.sleep(20)
+    while True:
+        if not zustand["verbunden"] and not cfg["bewaehrt"]:
+            pulte = [p for p in suche.zuhoeren().values() if "Avantis" in p["modell"]]
+            if len(pulte) == 1 and pulte[0]["ip"] != cfg["pult_ip"]:
+                print(time.strftime("%H:%M:%S"), "Pult gefunden, übernehme", pulte[0]["ip"], flush=True)
+                speichern(dict(cfg, pult_ip=pulte[0]["ip"]))
+        time.sleep(60)
 
 
 # ---------- Web ----------
@@ -458,6 +501,12 @@ class Web(BaseHTTPRequestHandler):
                 z = dict(zustand, ziele=[z[1] for z in ZIELE], keys=[z[0] for z in ZIELE], auto_update=cfg["auto_update"], pult_ip=cfg["pult_ip"],
                          gruppen=[dict(g, indizes=mixe_von(g["name"])) for g in cfg["gruppen"]])
             return self.antwort(json.dumps(z))
+        if self.path == "/suche":
+            try:
+                import suche
+                return self.antwort(json.dumps(suche.suchen()))
+            except ImportError:
+                return self.antwort('"Suche fehlt, Update läuft"', code=503)
         if self.path == "/einstellungen.json":
             return self.antwort(json.dumps(dict(cfg, profile=profile())))
         if self.path == "/branding.json":
@@ -516,6 +565,7 @@ if __name__ == "__main__":
     threading.Thread(target=midi, daemon=True).start()
     threading.Thread(target=led_abgleich, daemon=True).start()
     threading.Thread(target=update_wache, daemon=True).start()
+    threading.Thread(target=auto_suche, daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", WEB), Web)  # nur am Rechner selbst erreichbar
     print(f"Talkback läuft → http://localhost:{WEB}")
     marke = ORDNER / ".nach-update"

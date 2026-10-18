@@ -1,4 +1,5 @@
-# Erhöht jemand VERSION in talkback.py, entsteht hier automatisch ein Release.
+# Erhöht jemand VERSION in talkback.py, entsteht hier automatisch ein Release:
+# Text aus CHANGELOG.md, dazu ein fertiges Talkback.zip zum Installieren.
 # Die installierten Tools sehen es beim nächsten Prüfen und installieren es nachts.
 name: Release
 on:
@@ -18,7 +19,13 @@ jobs:
         run: |
           V=$(grep -oP '^VERSION = "\K[^"]+' talkback.py)
           if gh release view "v$V" >/dev/null 2>&1; then
-            echo "v$V gibt es schon"
-          else
-            gh release create "v$V" --title "v$V" --generate-notes
+            echo "v$V gibt es schon"; exit 0
           fi
+          # Abschnitt „## $V“ aus dem Changelog bis zur nächsten Überschrift
+          awk -v v="## $V" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
+          printf '\n---\n\n**📦 Installieren / Install:** [Talkback.zip](https://github.com/%s/releases/latest/download/Talkback.zip) · [Anleitung](https://github.com/%s/blob/main/INSTALL.de.md) · [Guide](https://github.com/%s/blob/main/INSTALL.md)\n\nBereits installiert? Das Tool aktualisiert sich nachts um 4 Uhr von selbst. / Already installed? The tool updates itself at 4 am.\n' "$GITHUB_REPOSITORY" "$GITHUB_REPOSITORY" "$GITHUB_REPOSITORY" >> notes.md
+          # fertiges Paket: Ordner „Talkback“ ohne Entwickler-Dateien
+          mkdir -p paket/Talkback
+          rsync -a --exclude '.git*' --exclude '.github' --exclude 'paket' --exclude 'notes.md' --exclude 'avantis-test.py' --exclude 'avantis-native.py' ./ paket/Talkback/
+          (cd paket && zip -qr ../Talkback.zip Talkback)
+          gh release create "v$V" --title "v$V" --notes-file notes.md Talkback.zip

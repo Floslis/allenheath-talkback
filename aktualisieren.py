@@ -6,9 +6,9 @@ from pathlib import Path
 REPO = "Floslis/avantis-talkback"
 ORDNER = Path(__file__).resolve().parent
 SICHERUNG = ORDNER / ".sicherung"
-# Nur diese Pfade werden ersetzt. Alles andere (einstellungen.json, branding/<eigenes>) bleibt liegen
-CODE = ["talkback.py", "aktualisieren.py", "index.html", "einstellungen.html", "Installieren.command",
-        "Deinstallieren.command", "README.md", "README.de.md", "LICENSE", "docs/", "branding/standard/", "branding/beispiel/"]
+# Alles aus dem Release wird übernommen, außer dem, was dem Nutzer gehört
+BEHALTEN = ("einstellungen.json", ".sicherung/", ".nach-update", ".reparatur-", "talkback.log")
+BRANDING_MIT = ("branding/standard/", "branding/beispiel/")  # andere Profile in branding/ sind eigene
 
 
 def version_tupel(v):
@@ -33,7 +33,11 @@ def neueste():
 
 
 def betrifft(name):
-    return any(name == c or (c.endswith("/") and name.startswith(c)) for c in CODE)
+    if name.startswith(BEHALTEN) or name.startswith(".github/"):
+        return False
+    if name.startswith("branding/"):
+        return name.startswith(BRANDING_MIT)
+    return True
 
 
 def installieren(zip_url):

@@ -34,6 +34,7 @@ But we still want to decide **who hears us**, mix by mix. And the desk has no so
 | 👥 **Groups** | As many groups as you like, each with its own name and mixes. One group can be "all others" (e.g. Band). Combine several at once |
 | 🎛️ **Softkeys with LED** | Softkeys on the desk toggle the groups. The LED lights green when a group is on, no matter where it was switched |
 | ⚙️ **Settings page** | Desk IP, talkback channel, mixes and groups, all editable in the browser |
+| 🔍 **Finds the desk** | Listens for the desk on the network and shows model and firmware. No typing IP addresses |
 | 🎨 **Branding** | Your own logo, title and colours per venue, from a profile folder |
 | 🚀 **Runs by itself** | Starts at login and restarts after a crash. Only needs Python 3, no extra packages |
 
@@ -63,23 +64,11 @@ flowchart LR
 
 ## Installation
 
-**Requirements:** a Mac on the same network as the desk, Python 3 (macOS offers to install it if missing)
+1. **[Download Talkback.zip](https://github.com/Floslis/avantis-talkback/releases/latest/download/Talkback.zip)**, always the latest version
+2. Put the `Talkback` folder **directly into your home folder** and right-click `Installieren.command` → Open
+3. In the tool, open **Einstellungen** (settings) → **Pult suchen** (find desk)
 
-1. [Download the latest version](../../archive/refs/heads/main.zip) and unzip it
-2. Put the folder **directly into your home folder**
-   > ⚠️ Not on the Desktop, in Documents or in Downloads. macOS does not let background services read files there, and the tool won't start. The installer checks this and warns you
-3. **Right-click `Installieren.command` → Open**
-4. Your browser opens http://localhost:8787. The top shows "Pult · verbunden" (desk connected)
-
-Just trying it out, without autostart: `python3 talkback.py`
-Uninstall: `Deinstallieren.command`
-
-## Setting up the desk
-
-1. Patch the **talkback mic** to a free input channel and make sure it can be assigned to your in-ear mixes
-2. Turn on **network MIDI**: Setup → Control → MIDI, note the base channel (default 12)
-3. Pick **one empty mute group per group** and put a **softkey** on each
-4. In the tool, open **Einstellungen** (settings) and enter the desk IP, talkback channel, mixes and groups
+**📖 Step by step, including desk setup and troubleshooting: [INSTALL.md](INSTALL.md)**
 
 <p align="center"><img src="docs/einstellungen.png" alt="Settings page" width="70%"></p>
 

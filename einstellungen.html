@@ -30,6 +30,8 @@ input[type=text], input[type=number], select { font: 16px var(--body); padding: 
 .chip input { margin: 0; }
 .chip:has(input:checked) { border-color: var(--wahl); background: var(--wahl-hell); }
 .chip small { color: var(--leise); }
+div.feld { display: grid; gap: 6px; align-content: start; }
+#treffer { margin-top: 10px; }
 .gruppe { border: 1px solid var(--linie); border-radius: 10px; padding: 12px; display: grid; gap: 10px; margin-bottom: 10px; }
 .gruppe-kopf { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
 .gruppe-kopf label.feld { flex: 1 1 160px; }
@@ -65,11 +67,14 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   <section>
     <h2>Pult</h2>
     <div class="felder">
-      <label class="feld">IP-Adresse des Pults<input type="text" id="pult_ip" inputmode="decimal"></label>
+      <div class="feld"><label class="feld">IP-Adresse des Pults<input type="text" id="pult_ip" inputmode="decimal"></label>
+        <button class="knopf" id="suchen" type="button">Pult suchen</button></div>
       <label class="feld">Talkback-Kanal<small>Eingang mit dem Talkback-Mikro</small><input type="number" id="talkback_kanal" min="1" max="128"></label>
       <label class="feld">MIDI-Basiskanal<small>Setup → Control → MIDI, Standard 12</small><input type="number" id="midi_kanal" min="1" max="12"></label>
       <label class="feld">Mono-Aux im Pult<small>Anzahl laut Mix-Konfiguration</small><input type="number" id="mono_aux_anzahl" min="0" max="24"></label>
     </div>
+    <div class="chips" id="treffer"></div>
+    <p class="hinweis" id="sucheText" hidden></p>
   </section>
 
   <section>
@@ -175,6 +180,27 @@ function malen() {
 }
 
 $('branding').onchange = () => { cfg.branding = $('branding').value; };
+$('suchen').onclick = async () => {
+  $('suchen').disabled = true; $('suchen').textContent = 'Suche …';
+  $('sucheText').hidden = false; $('sucheText').textContent = 'Lausche auf Pulte im Netz, das dauert ein paar Sekunden.';
+  $('treffer').replaceChildren();
+  try {
+    const liste = await (await fetch('/suche')).json();
+    if (!Array.isArray(liste) || !liste.length) {
+      $('sucheText').textContent = 'Kein Pult gefunden. Ist der Rechner im selben Netz wie das Pult?';
+    } else {
+      $('sucheText').textContent = 'Gefunden. Antippen übernimmt die IP, dann Speichern.';
+      $('treffer').replaceChildren(...liste.map((p) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'knopf';
+        b.textContent = `${p.ip} · ${p.modell}${p.firmware ? ' · Firmware ' + p.firmware : ''}`;
+        b.onclick = () => { $('pult_ip').value = p.ip; cfg.pult_ip = p.ip; $('sucheText').textContent = `${p.ip} übernommen, jetzt Speichern.`; };
+        return b;
+      }));
+    }
+  } catch { $('sucheText').textContent = 'Suche fehlgeschlagen.'; }
+  $('suchen').disabled = false; $('suchen').textContent = 'Pult suchen';
+};
 $('neu').onclick = () => { cfg.gruppen.push({ name: `Gruppe ${cfg.gruppen.length + 1}`, rest: false, mixe: [], mutegruppe: null }); malen(); };
 $('speichern').onclick = async () => {
   cfg.branding = $('branding').value;
