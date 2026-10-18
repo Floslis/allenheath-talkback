@@ -1,4 +1,4 @@
-# Talkback für Allen & Heath Avantis
+# Talkback für Allen & Heath Pulte
 
 [English](README.md) · **Deutsch**
 
@@ -46,7 +46,7 @@ Trotzdem wollen wir **einzeln steuern, wer uns hört**. Und das Pult hat keinen 
 
 Weitere Pulte kommen als eigene Treiber dazu. Du hast ein Pult und willst helfen? Mach ein Issue auf.
 
-> 🙋 **Du hast ein dLive in oder um Berlin?** Ich würde gern einen halben Tag daran, um den Treiber zu bauen. [Melde dich hier](https://github.com/Floslis/avantis-talkback/issues/1).
+> 🙋 **Du hast ein dLive in oder um Berlin?** Ich würde gern einen halben Tag daran, um den Treiber zu bauen. [Melde dich hier](https://github.com/Floslis/allenheath-talkback/issues/1).
 
 ## So funktioniert es
 
@@ -64,7 +64,7 @@ flowchart LR
 
 ## Installation
 
-1. **[Talkback.zip herunterladen](https://github.com/Floslis/avantis-talkback/releases/latest/download/Talkback.zip)**, immer die neueste Version
+1. **[Talkback.zip herunterladen](https://github.com/Floslis/allenheath-talkback/releases/latest/download/Talkback.zip)**, immer die neueste Version
 2. Den Ordner `Talkback` **direkt in den Benutzerordner** legen, Rechtsklick auf `Installieren.command` → Öffnen
 3. Im Tool **Einstellungen** → **Pult suchen**
 

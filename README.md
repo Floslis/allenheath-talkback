@@ -1,4 +1,4 @@
-# Talkback for Allen & Heath Avantis
+# Talkback for Allen & Heath desks
 
 **English** · [Deutsch](README.de.md)
 
@@ -51,7 +51,7 @@ But we still want to decide **who hears us**, mix by mix. And the desk has no so
 
 More desks will come as separate drivers. Have a desk and want to help? Open an issue.
 
-> 🙋 **Got a dLive in or around Berlin?** I'd love to spend half a day with one to build the driver. [Get in touch here](https://github.com/Floslis/avantis-talkback/issues/1).
+> 🙋 **Got a dLive in or around Berlin?** I'd love to spend half a day with one to build the driver. [Get in touch here](https://github.com/Floslis/allenheath-talkback/issues/1).
 
 ## How it works
 
@@ -69,7 +69,7 @@ flowchart LR
 
 ## Installation
 
-1. **[Download Talkback.zip](https://github.com/Floslis/avantis-talkback/releases/latest/download/Talkback.zip)**, always the latest version
+1. **[Download Talkback.zip](https://github.com/Floslis/allenheath-talkback/releases/latest/download/Talkback.zip)**, always the latest version
 2. Put the `Talkback` folder **directly into your home folder** and right-click `Installieren.command` → Open
 3. In the tool, open **Settings** → **Find desk**
 

@@ -21,7 +21,7 @@ Takes about 10 minutes: 5 on the Mac, 5 at the desk.
 
 ## 2. Install on the Mac
 
-1. **[Download Talkback.zip](https://github.com/Floslis/avantis-talkback/releases/latest/download/Talkback.zip)** (always the latest version)
+1. **[Download Talkback.zip](https://github.com/Floslis/allenheath-talkback/releases/latest/download/Talkback.zip)** (always the latest version)
 2. Unzip it and drag the **`Talkback` folder directly into your home folder** (Finder → Go → Home, the house icon)
 
    > ⚠️ **Not** on the Desktop, in Documents, Downloads or iCloud. macOS does not let background services read files there, and the tool won't start. The installer checks this and warns you.

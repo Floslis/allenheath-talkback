@@ -15,6 +15,14 @@ Each version has a German and an English part. The GitHub action uses the sectio
 - Desk type selectable in the settings (Avantis only for now)
 - Long texts in dropdowns no longer run into the next field
 
+## 0.6.1
+
+**Deutsch**
+- **Neuer Name:** Das Projekt heißt jetzt `allenheath-talkback`, weil SQ und dLive dazukommen. Updates kommen ab jetzt direkt von der neuen Adresse, alte Links leitet GitHub weiter
+
+**English**
+- **New name:** the project is now called `allenheath-talkback`, since SQ and dLive are coming. Updates now come straight from the new address, GitHub redirects old links
+
 ## 0.6.0
 
 **Deutsch**
