@@ -46,6 +46,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spac
 a.knopf { text-decoration: none; }
 .leer { color: var(--leise); font-size: 14px; }
 .update { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; border: 2px solid var(--wahl); background: var(--wahl-hell); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+.update[hidden] { display: none; } /* sonst überstimmt display:flex das Ausblenden */
 .fuss-rechts { margin-left: auto; display: flex; gap: 12px; align-items: center; }
 .kofi { margin-left: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px;
   background: #72a4f2; color: #fff; font: 600 12px var(--body); text-decoration: none; }
@@ -190,7 +191,7 @@ function aufbauen() {
 function malen() {
   const online = Z.verbunden, h = hoeren();
   $('status').className = 'status' + (online ? ' ok' : '');
-  $('status').innerHTML = online ? 'Pult · <b>verbunden</b>' : '<b>Pult nicht verbunden</b> · versuche neu …';
+  $('status').innerHTML = online ? 'Pult · <b>verbunden</b>' : `<b>Pult ${Z.pult_ip} nicht erreichbar</b> · IP unter Einstellungen prüfen`;
   for (const b of $('gruppen').querySelectorAll('.gruppe')) {
     const g = gruppe(b.dataset.name);
     const softkey = g.mutegruppe ? ` · Softkey MG ${g.mutegruppe}` : '';
