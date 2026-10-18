@@ -3,6 +3,14 @@
 Jede Version hat einen deutschen und einen englischen Teil. Die GitHub-Action nimmt den Abschnitt der neuen Version als Text für das Release.
 Each version has a German and an English part. The GitHub action uses the section of the new version as release text.
 
+## 0.5.1
+
+**Deutsch**
+- Auswahllisten sehen jetzt auch in Safari aus wie die übrigen Felder
+
+**English**
+- Dropdowns now look like the other fields in Safari too
+
 ## 0.5.0
 
 **Deutsch**
