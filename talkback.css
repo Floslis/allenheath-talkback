@@ -83,3 +83,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 select { -webkit-appearance: none; appearance: none; background-color: var(--flaeche); background-image: var(--pfeil); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px 8px; padding: 8px 36px 8px 10px; min-height: 38px; line-height: 1.3; cursor: pointer; }
 select:hover { border-color: var(--akzent); }
 input[type=text], input[type=number] { min-height: 38px; }
+/* Felder füllen ihre Spalte, lange Texte (z. B. Pult-Typ) laufen nicht ins Nachbarfeld */
+label.feld, div.feld { min-width: 0; }
+label.feld select, label.feld input { width: 100%; min-width: 0; text-overflow: ellipsis; }

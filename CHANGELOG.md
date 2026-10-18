@@ -3,6 +3,18 @@
 Jede Version hat einen deutschen und einen englischen Teil. Die GitHub-Action nimmt den Abschnitt der neuen Version als Text für das Release.
 Each version has a German and an English part. The GitHub action uses the section of the new version as release text.
 
+## 0.7.0
+
+**Deutsch**
+- **Treiber-Aufbau:** Alles Pult-Spezifische steckt jetzt in `pulte/` (für das Avantis `pulte/avantis.py`). Neue Pulte kommen als eigene Datei dazu, ohne den Rest anzufassen
+- Pult-Typ in den Einstellungen wählbar (bisher nur Avantis)
+- Lange Texte in Auswahllisten laufen nicht mehr ins Nachbarfeld
+
+**English**
+- **Driver architecture:** everything desk-specific now lives in `pulte/` (for the Avantis `pulte/avantis.py`). New desks are added as their own file without touching the rest
+- Desk type selectable in the settings (Avantis only for now)
+- Long texts in dropdowns no longer run into the next field
+
 ## 0.6.0
 
 **Deutsch**

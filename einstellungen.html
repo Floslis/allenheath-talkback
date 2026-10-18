@@ -36,6 +36,7 @@
   <p class="ueber" data-t="pult"></p>
   <div class="kasten">
     <div class="felder">
+      <label class="feld"><span data-t="pult_typ"></span><small data-t="pult_typ_klein"></small><select id="pult_typ"></select></label>
       <div class="feld"><label class="feld"><span data-t="ip"></span><small data-t="ip_klein"></small><input type="text" id="pult_ip" inputmode="decimal"></label>
         <button type="button" id="suchen" data-t="pult_suchen"></button></div>
       <label class="feld"><span data-t="tb_kanal"></span><small data-t="tb_kanal_klein"></small><input type="number" id="talkback_kanal" min="1" max="128"></label>
@@ -65,8 +66,8 @@
 <script src="oberflaeche.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
-const ALLE = [...Array(24)].map((_, i) => `aux${i + 1}`).concat([...Array(12)].map((_, i) => `staux${i + 1}`));
-const titel = (k) => k.startsWith('st') ? `StAux ${k.slice(5)}` : `Aux ${k.slice(3)}`;
+let ALLE = [], BESCHRIFTUNG = {};  // mögliche Mixe kommen vom Treiber des gewählten Pults
+const titel = (k) => BESCHRIFTUNG[k] || k;
 const FELDER = ['pult_ip', 'talkback_kanal', 'midi_kanal'];
 let cfg, namen = {}, vorhanden = null;  // vorhanden: Mixe, die das Pult wirklich hat (null = noch unbekannt)
 
@@ -91,6 +92,8 @@ function feld(label, eingabe) {
 function malen() {
   $('branding').replaceChildren(...Object.entries(cfg.profile).map(([k, n]) => new Option(n, k)));
   $('branding').value = cfg.branding;
+  $('pult_typ').replaceChildren(...Object.entries(cfg.pult_typen).map(([k, n]) => new Option(n, k)));
+  $('pult_typ').value = cfg.pult_typ;
   $('sprache').value = cfg.sprache;
   $('auto_update').checked = cfg.auto_update;
   for (const f of FELDER) $(f).value = cfg[f];
@@ -134,6 +137,7 @@ function malen() {
 }
 
 $('branding').onchange = () => { cfg.branding = $('branding').value; };
+$('pult_typ').onchange = () => { cfg.pult_typ = $('pult_typ').value; };
 $('sprache').onchange = () => { cfg.sprache = $('sprache').value; };
 $('auto_update').onchange = () => { cfg.auto_update = $('auto_update').checked; };
 $('neu').onclick = () => { cfg.gruppen.push({ name: t('gruppe_n', { n: cfg.gruppen.length + 1 }), rest: false, mixe: [], mutegruppe: null }); malen(); };
@@ -187,6 +191,8 @@ $('speichern').onclick = async () => {
 
 OBERFLAECHE.then(async () => {
   cfg = await (await fetch('/einstellungen.json')).json();
+  ALLE = cfg.moegliche_ziele.map(([k]) => k);
+  BESCHRIFTUNG = Object.fromEntries(cfg.moegliche_ziele);
   try {
     const z = await (await fetch('/zustand')).json();
     z.keys.forEach((k, i) => { if (z.namen[i]) namen[k] = z.namen[i]; });

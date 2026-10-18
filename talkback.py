@@ -1,29 +1,51 @@
 #!/usr/bin/env python3
-"""Avantis-Talkback: schaltet das Assign vom Talkback-Kanal auf die In-Ear-Mixe.
-Natives Protokoll (TCP 51321 + UDP) für Assign und Zustand, MIDI/TCP (51325) für Namen und Mute-Gruppen.
+"""Talkback: schaltet das Assign eines Talkback-Kanals auf In-Ear-Mixe, per Browser oder Softkey am Pult.
+Hier liegt alles, was für jedes Pult gleich ist: Einstellungen, Gruppen, Softkey-Logik, Oberfläche, Updates.
+Das Pult selbst steckt in einem Treiber in pulte/ (z. B. pulte/avantis.py).
 Einstellungen in einstellungen.json, änderbar unter http://localhost:8787/einstellungen
 Start: python3 talkback.py  → http://localhost:8787"""
-import datetime, ipaddress, json, re, socket, sys, threading, time, webbrowser
+import datetime, ipaddress, json, re, sys, threading, time, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-VERSION = "0.6.0"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
+VERSION = "0.7.0"  # erhöhen → die GitHub-Action baut daraus ein Release, die Tools holen es sich
 WEB = 8787
 ORDNER = Path(__file__).resolve().parent
 EINSTELLUNGEN = ORDNER / "einstellungen.json"
-ALT_GRUPPEN = ORDNER / "gruppen.json"
-BRANDING = ORDNER / "branding"  # je Profil ein Ordner mit profil.json und optional logo.svg  # Format bis 18.10.2026, wird einmalig übernommen
-TAG = b"\x01\xf4"
+ALT_GRUPPEN = ORDNER / "gruppen.json"  # Format bis 18.10.2026, wird einmalig übernommen
+BRANDING = ORDNER / "branding"  # je Profil ein Ordner mit profil.json und optional logo.svg
+# Dateien, die ältere Updater noch nicht kannten. Fehlt eine, holt sich das Tool das Release einmal neu
+PFLICHT = ["suche.py", "stream.css", "talkback.css", "oberflaeche.js", "pulte/__init__.py", "pulte/basis.py", "pulte/avantis.py"]
+
+
+def selbstreparatur():
+    marke = ORDNER / f".reparatur-{VERSION}"  # höchstens ein Versuch pro Version, keine Neustart-Schleife
+    if any(not (ORDNER / d).exists() for d in PFLICHT) and not marke.exists():
+        marke.write_text("1")
+        import aktualisieren
+        v, url, _ = aktualisieren.neueste()
+        print(time.strftime("%H:%M:%S"), "Dateien fehlen, hole Version", v, "nochmal", flush=True)
+        aktualisieren.installieren(url)
+        (ORDNER / ".nach-update").write_text(v)
+        aktualisieren.neu_starten()
+
+
+try:
+    from pulte import TREIBER
+except ImportError:  # ein älterer Updater hat pulte/ nicht mitgebracht
+    selbstreparatur()
+    raise
 
 STANDARD = {
     "branding": "standard",
     "auto_update": True,       # nachts um 4 Uhr installieren, nie während eines Gottesdienstes
     "pausiert": False,         # Pause: keine Verbindung zum Pult, bis jemand „Fortsetzen“ drückt
     "sprache": "auto",         # auto (folgt dem Browser), de, en
+    "pult_typ": "avantis",     # Schlüssel in pulte/__init__.py
     "pult_ip": "192.168.1.50",
     "talkback_kanal": 87,
     "midi_kanal": 12,          # MIDI-Basiskanal am Pult (Setup → Control → MIDI)
-    "mono_aux_anzahl": 12,     # Stereo-Aux liegen im Input Mixer hinter den Mono-Aux
+    "mono_aux_anzahl": 12,     # zählt der Avantis-Treiber selbst
     "ziele": [f"aux{i}" for i in range(1, 10)] + [f"staux{i}" for i in range(1, 6)],
     "gruppen": [
         {"name": "Band", "rest": True, "mixe": [], "mutegruppe": 6},
@@ -34,15 +56,6 @@ STANDARD = {
 
 
 # ---------- Einstellungen ----------
-
-def ziel_info(key, cfg):
-    """aux3 → ("Aux 3", Slot, MIDI-Nummer für den Namen). Stereo-Mixe belegen 2 Slots."""
-    art, nr = re.fullmatch(r"(aux|staux)(\d+)", key).groups()
-    nr = int(nr)
-    if art == "aux":
-        return f"Aux {nr}", nr - 1, nr - 1
-    return f"StAux {nr}", cfg["mono_aux_anzahl"] + (nr - 1) * 2, 0x40 + nr - 1
-
 
 def profile():
     """Verfügbare Branding-Profile: Ordnername → Anzeigename."""
@@ -77,12 +90,15 @@ def pruefen(cfg):
     c = {k: cfg.get(k, v) for k, v in STANDARD.items()}
     if c["branding"] not in profile():
         c["branding"] = "standard"
+    if c["pult_typ"] not in TREIBER:
+        c["pult_typ"] = "avantis"
     ipaddress.ip_address(c["pult_ip"])
     for feld, lo, hi in (("talkback_kanal", 1, 128), ("midi_kanal", 1, 12), ("mono_aux_anzahl", 0, 24)):
         c[feld] = int(c[feld])
         if not lo <= c[feld] <= hi:
             raise ValueError(f"{feld} muss zwischen {lo} und {hi} liegen")
-    c["ziele"] = [z for z in dict.fromkeys(c["ziele"]) if re.fullmatch(r"(aux([1-9]|1\d|2[0-4])|staux([1-9]|1[0-2]))", z)]
+    moeglich = {k for k, _ in TREIBER[c["pult_typ"]].moegliche_ziele(c)}
+    c["ziele"] = [z for z in dict.fromkeys(c["ziele"]) if z in moeglich]
     if not c["ziele"]:
         raise ValueError("mindestens ein Mix muss ausgewählt sein")
     namen, gruppen = set(), []
@@ -131,22 +147,60 @@ def laden():
 
 
 cfg = laden()
-ZIELE, PARAM_ZU_ZIEL = [], {}
+ZIELE = []  # (Schlüssel, Anzeige) in der Reihenfolge der Oberfläche
 zustand = {"verbunden": False, "an": [], "namen": [], "gruppen_an": {}, "version": VERSION, "update": None,
-           "vorhanden": {}}  # alle Mixe, die das Pult hat: key → Name (aus den Namensabfragen)
-ALLE_MIXE = [(f"aux{i}", i - 1) for i in range(1, 25)] + [(f"staux{i}", 0x40 + i - 1) for i in range(1, 13)]
-mg_stand = {}
+           "vorhanden": {}}  # alle Mixe, die das Pult hat: Schlüssel → Name
+mg_stand = {}  # Gruppe → zuletzt bekannter Zustand ihrer Softkey-LED (an = grün)
 lock = threading.Lock()
-pult = {"sock": None, "handle": None, "udp": None, "midi": None}
+
+
+class Melder:
+    """Nimmt die Meldungen des Treibers entgegen (siehe pulte/basis.py) und schreibt sie in den Zustand."""
+
+    def index(self, ziel):
+        return next((i for i, z in enumerate(ZIELE) if z[0] == ziel), None)
+
+    def verbunden(self, ja):
+        with lock:
+            zustand["verbunden"] = ja
+            if not ja:
+                zustand["an"] = [None] * len(ZIELE)
+
+    def assign(self, ziel, an):
+        with lock:
+            i = self.index(ziel)
+            if i is not None and i < len(zustand["an"]):
+                zustand["an"][i] = an
+
+    def name(self, ziel, name):
+        with lock:
+            i = self.index(ziel)
+            if i is not None and i < len(zustand["namen"]):
+                zustand["namen"][i] = name
+
+    def vorhanden(self, ziele):
+        with lock:
+            zustand["vorhanden"] = ziele
+
+    def mutegruppe(self, nr, gemutet):
+        for g in cfg["gruppen"]:
+            if g["mutegruppe"] == nr:
+                softkey(g["name"], not gemutet)  # invertiert: Gruppe an = Mute-Gruppe aus (LED grün)
+
+    def einstellung(self, **werte):
+        speichern(dict(cfg, **werte))
+
+
+treiber = TREIBER[cfg["pult_typ"]](cfg, Melder())
 
 
 def anwenden(neu, neu_verbinden):
-    """Neue Einstellungen übernehmen. Bei anderer IP oder anderem Kanal die Verbindungen neu aufbauen."""
-    global cfg, ZIELE, PARAM_ZU_ZIEL
+    """Neue Einstellungen übernehmen. Bei anderer IP, anderem Kanal oder Pause die Verbindung neu aufbauen."""
+    global cfg, ZIELE
     with lock:
         cfg = neu
-        ZIELE = [(k,) + ziel_info(k, cfg) for k in cfg["ziele"]]  # (key, Anzeige, Slot, MIDI-Nr)
-        PARAM_ZU_ZIEL = {param(z[2]): i for i, z in enumerate(ZIELE)}
+        beschriftung = dict(TREIBER[cfg["pult_typ"]].moegliche_ziele(cfg))
+        ZIELE = [(k, beschriftung.get(k, k)) for k in cfg["ziele"]]
         if neu_verbinden or len(zustand["an"]) != len(ZIELE):
             # neue Verbindung → das Pult schickt beim Abonnieren alles neu
             zustand.update(an=[None] * len(ZIELE), namen=[""] * len(ZIELE))
@@ -157,207 +211,7 @@ def anwenden(neu, neu_verbinden):
         for name in list(mg_stand):
             if name not in zustand["gruppen_an"]:
                 del mg_stand[name]
-        socks = [pult["sock"], pult["midi"]]
-    if neu_verbinden:
-        for s in socks:  # die Threads merken das und verbinden sich neu
-            try:
-                s.shutdown(socket.SHUT_RDWR)
-            except (OSError, AttributeError):
-                pass
-
-
-def param(slot):
-    return 0x4550 + (cfg["talkback_kanal"] - 1) * 56 + slot
-
-
-def midi_basis():
-    return cfg["midi_kanal"] - 1
-
-
-# ---------- Pult: natives Protokoll ----------
-
-def nachrichten(buf):
-    while (a := buf.find(b"\xf0")) >= 0 and (e := buf.find(b"\xf7", a)) >= 0:
-        yield bytes(buf[a:e + 1])
-        del buf[:e + 1]
-
-
-def senden(s, h, prm, daten):
-    s.sendall(b"\xf0\x00\x00" + h + TAG + prm.to_bytes(2, "big") + len(daten).to_bytes(2, "big") + daten + b"\xf7")
-
-
-def abonnieren(s, h):
-    for p in PARAM_ZU_ZIEL:  # pro Parameter einzeln, wie Mixing Station
-        senden(s, h, 0x0006, b"\x00\x00" + TAG + p.to_bytes(2, "big") * 2 + b"\x00\xff")
-
-
-def nativ():
-    """Hält die Verbindung zum Pult, abonniert die Assigns und führt den Zustand."""
-    while True:
-        s = u = None
-        if cfg["pausiert"]:
-            time.sleep(1)
-            continue
-        try:
-            ip = cfg["pult_ip"]
-            s = socket.create_connection((ip, 51321), timeout=5)
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)  # merkt echte Abbrüche (Kabel, Pult aus)
-            s.setsockopt(socket.IPPROTO_TCP, 0x10, 10)  # TCP_KEEPALIVE (macOS): nach 10 s Ruhe prüfen
-            # Anmeldung: eigenen UDP-Port nennen, das Pult nennt seinen. Ohne Lebenszeichen per UDP
-            # meldet das Pult „Internal Error“ und trennt nach ~30 s (siehe udp_lebenszeichen)
-            u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            u.bind(("", 0))
-            u.settimeout(0.2)
-            port = u.getsockname()[1].to_bytes(2, "big")
-            s.sendall(b"\xe0\x00\x04\x01\x03" + port + b"\xe7" + b"\xe0\x00\x04\x04\x03" + port + b"\xe7")
-            name = b"Input Mixer\x00"
-            s.sendall(b"\xf0\x00\x01\x00\x00" + TAG + b"\x00\x04" + len(name).to_bytes(2, "big") + name + b"\xf7")
-            s.settimeout(2)
-            buf, h = bytearray(), None
-            udp = {"sock": u, "ziel": None}
-            pult["udp"] = udp
-            with lock:
-                pult["sock"] = s
-            while True:
-                try:
-                    d = s.recv(65536)
-                except socket.timeout:  # Funkstille ist normal, wenn sich am Pult nichts ändert
-                    continue
-                if not d:
-                    raise ConnectionError("Pult hat getrennt")
-                if udp["ziel"] is None and (k := (bytes(buf) + d).find(b"\xe0\x00\x04\x02\x03")) >= 0:
-                    rest = (bytes(buf) + d)[k + 5:k + 7]
-                    if len(rest) == 2:
-                        udp["ziel"] = (ip, int.from_bytes(rest, "big"))
-                buf += d
-                for m in nachrichten(buf):
-                    if h is None and m[1] == 0 and m[3:5] == TAG and m[5:11] == b"\x00\x00\x00\x02\x00\x02":
-                        h = m[11:13]
-                        abonnieren(s, h)
-                        with lock:
-                            pult["handle"] = h
-                            zustand["verbunden"] = True
-                    elif h and len(m) == 13 and m[3:7] == TAG + h:
-                        with lock:
-                            i = PARAM_ZU_ZIEL.get(int.from_bytes(m[7:9], "big"))
-                            if i is not None:
-                                zustand["an"][i] = bool(m[11])
-        except OSError as e:
-            print(time.strftime("%H:%M:%S"), "Pult-Verbindung weg:", repr(e), flush=True)
-        with lock:
-            pult.update(sock=None, handle=None, udp=None)
-            zustand["verbunden"] = False
-            zustand["an"] = [None] * len(ZIELE)
-        for x in (s, u):
-            try:
-                x.close()
-            except (OSError, AttributeError):
-                pass
-        time.sleep(3)
-
-
-def udp_lebenszeichen():
-    """Jede Sekunde e0 00 01 03 e7 per UDP ans Pult (wie Mixing Station), Eingehendes verwerfen."""
-    while True:
-        udp = pult.get("udp")
-        if udp and udp["ziel"]:
-            try:
-                udp["sock"].sendto(b"\xe0\x00\x01\x03\xe7", udp["ziel"])
-                ende = time.time() + 1
-                while time.time() < ende:
-                    try:
-                        udp["sock"].recv(65536)
-                    except socket.timeout:
-                        pass
-                continue
-            except OSError:
-                pass
-        time.sleep(0.2)
-
-
-# ---------- Pult: MIDI über TCP ----------
-
-def midi():
-    """Dauerverbindung MIDI/TCP: Mix-Namen (jede Minute) und die Mute-Gruppen der Softkeys."""
-    while True:
-        if cfg["pausiert"]:
-            time.sleep(1)
-            continue
-        try:
-            s = socket.create_connection((cfg["pult_ip"], 51325), timeout=5)
-            with lock:
-                pult["midi"] = s
-            s.settimeout(1)
-            buf, naechste, lauf = bytearray(), 0, None
-            while True:
-                if time.time() > naechste:
-                    # alle möglichen Mixe abfragen: nur die vorhandenen antworten, so zählt das Tool sie selbst
-                    gefragt = time.time()
-                    for _, nr in ALLE_MIXE:
-                        s.sendall(bytes([0xF0, 0, 0, 0x1A, 0x50, 0x10, 1, 0, midi_basis() + 2, 0x01, nr, 0xF7]))
-                    naechste = time.time() + 60
-                    threading.Timer(3, mixe_auswerten, args=(gefragt,)).start()
-                try:
-                    d = s.recv(4096)
-                except socket.timeout:
-                    continue
-                if not d:
-                    raise ConnectionError("MIDI getrennt")
-                for b in d:
-                    if b == 0xFE:  # Active Sensing
-                        continue
-                    if b & 0x80 and b != 0xF7:  # neues Statusbyte
-                        buf = bytearray([b])
-                        if b < 0xF0:
-                            lauf = b
-                        continue
-                    if not buf and lauf:  # Running Status
-                        buf = bytearray([lauf])
-                    buf.append(b)
-                    if buf[0] == 0xF0 and b == 0xF7:
-                        midi_nachricht(bytes(buf)); buf = bytearray()
-                    elif buf[0] != 0xF0 and len(buf) == 3:
-                        midi_nachricht(bytes(buf)); buf = bytearray()
-        except OSError:
-            pass
-        with lock:
-            pult["midi"] = None
-        time.sleep(3)
-
-
-def mixe_auswerten(seit):
-    """Nach einer Abfragerunde: welche Mixe gibt es, wie viele Mono-Aux? Stimmt die Zahl nicht, umstellen."""
-    with lock:
-        frisch = {nr: name for nr, (name, t) in antworten.items() if t >= seit}
-        if not frisch:
-            return  # keine Antwort (Pult weg), nichts ändern
-        zustand["vorhanden"] = {k: frisch[nr] for k, nr in ALLE_MIXE if nr in frisch}
-        mono = sum(1 for nr in frisch if nr < 0x40)
-    if mono != cfg["mono_aux_anzahl"]:
-        print(time.strftime("%H:%M:%S"), f"Pult hat {mono} Mono-Aux, stelle um", flush=True)
-        speichern(dict(cfg, mono_aux_anzahl=mono))
-
-
-def mutegruppe_note(nr):
-    return 0x45 + nr  # Mute-Gruppe 1 = 0x46
-
-
-antworten = {}  # MIDI-Nummer → (Name, Zeit) der letzten Namensantworten
-
-
-def midi_nachricht(m):
-    if m[0] == 0xF0 and len(m) > 11 and m[9] == 0x02:  # Name
-        name = m[11:-1].split(b"\x00")[0].decode("latin1").strip()
-        with lock:
-            antworten[m[10]] = (name, time.time())
-            for i, z in enumerate(ZIELE):
-                if m[10] == z[3]:
-                    zustand["namen"][i] = name
-    # Mute-Gruppen: Note On auf Kanal Basis+4, 7F = gemutet, 3F = nicht gemutet (danach ein 00 als Abschluss)
-    elif m[0] == 0x90 | (midi_basis() + 4) and m[2] in (0x7F, 0x3F):
-        for g in cfg["gruppen"]:
-            if g["mutegruppe"] and mutegruppe_note(g["mutegruppe"]) == m[1]:
-                softkey(g["name"], m[2] == 0x3F)  # invertiert: Gruppe an = Mute-Gruppe aus (LED grün)
+    treiber.anwenden(cfg, [z[0] for z in ZIELE], neu_verbinden)
 
 
 # ---------- Gruppen ----------
@@ -403,7 +257,7 @@ def led_abgleich():
     while True:
         time.sleep(0.3)
         with lock:
-            an, s, gruppen = list(zustand["an"]), pult.get("midi"), list(cfg["gruppen"])
+            an, gruppen = list(zustand["an"]), list(cfg["gruppen"])
         if not an or None in an:
             continue
         for g in gruppen:
@@ -416,29 +270,28 @@ def led_abgleich():
                 zustand["gruppen_an"][g["name"]] = ist
                 alt = mg_stand.get(g["name"])
                 mg_stand[g["name"]] = ist
-            if alt != ist and s and g["mutegruppe"]:
-                k, n = 0x90 | (midi_basis() + 4), mutegruppe_note(g["mutegruppe"])
-                try:
-                    s.sendall(bytes([k, n, 0x3F if ist else 0x7F, k, n, 0]))
-                except OSError:
-                    pass
+            if alt != ist and g["mutegruppe"]:
+                treiber.mutegruppe_setzen(g["mutegruppe"], not ist)  # LED grün = Mute-Gruppe aus
 
 
 def setzen(an):
     """an: Liste mit True/False je Ziel."""
     with lock:
-        s, h = pult["sock"], pult["handle"]
-        if not s or not h or len(an) != len(ZIELE):
+        if not treiber.bereit() or len(an) != len(ZIELE):
             return False
         zustand["an"] = [bool(w) for w in an]  # auf einmal, damit der LED-Abgleich keinen halben Zustand sieht
-        params = [param(z[2]) for z in ZIELE]
-    for p, wert in zip(params, an):
-        senden(s, h, p, bytes([1 if wert else 0]))
-    return True
+        werte = {z[0]: bool(w) for z, w in zip(ZIELE, an)}
+    return treiber.setzen(werte)
 
 
 def speichern(neu):
     neu = pruefen(neu)
+    if neu["pult_typ"] != cfg["pult_typ"]:  # anderes Pult → anderer Treiber, sauberster Weg ist ein Neustart
+        EINSTELLUNGEN.write_text(json.dumps(neu, indent=2, ensure_ascii=False))
+        import aktualisieren
+        (ORDNER / ".nach-update").write_text("pult")
+        threading.Thread(target=aktualisieren.neu_starten, daemon=True).start()
+        return
     verbinden = any(neu[k] != cfg[k] for k in ("pult_ip", "talkback_kanal", "midi_kanal", "mono_aux_anzahl", "ziele", "pausiert"))
     EINSTELLUNGEN.write_text(json.dumps(neu, indent=2, ensure_ascii=False))
     anwenden(neu, verbinden)
@@ -454,22 +307,14 @@ def update_installieren(info):
     aktualisieren.neu_starten()
 
 
-PFLICHT = ["suche.py", "stream.css", "talkback.css", "oberflaeche.js"]  # Module, die ältere Updater noch nicht kannten
-
-
 def update_wache():
     """Prüft alle 6 h auf ein neues Release. Automatisch installiert wird nur zwischen 4 und 5 Uhr."""
     import aktualisieren
     naechste = 0
-    # Selbstreparatur: hat ein älterer Updater eine neue Datei nicht mitgebracht, das Release nochmal holen
-    marke = ORDNER / f".reparatur-{VERSION}"  # höchstens ein Versuch pro Version, keine Neustart-Schleife
-    if any(not (ORDNER / d).exists() for d in PFLICHT) and not marke.exists():
-        marke.write_text("1")
-        try:
-            v, url, _ = aktualisieren.neueste()
-            update_installieren({"version": v, "url": url})
-        except Exception as e:
-            print(time.strftime("%H:%M:%S"), "Selbstreparatur fehlgeschlagen:", repr(e), flush=True)
+    try:
+        selbstreparatur()
+    except Exception as e:
+        print(time.strftime("%H:%M:%S"), "Selbstreparatur fehlgeschlagen:", repr(e), flush=True)
     while True:
         if time.time() > naechste:
             try:
@@ -520,17 +365,19 @@ class Web(BaseHTTPRequestHandler):
         if self.path == "/zustand":
             with lock:
                 z = dict(zustand, ziele=[z[1] for z in ZIELE], keys=[z[0] for z in ZIELE], auto_update=cfg["auto_update"], pult_ip=cfg["pult_ip"],
+                         pult=treiber.name,
                          pausiert=cfg["pausiert"], mono_aux_anzahl=cfg["mono_aux_anzahl"],
                          gruppen=[dict(g, indizes=mixe_von(g["name"])) for g in cfg["gruppen"]])
             return self.antwort(json.dumps(z))
         if self.path == "/suche":
             try:
-                import suche
-                return self.antwort(json.dumps(suche.suchen()))
+                return self.antwort(json.dumps(TREIBER[cfg["pult_typ"]].suchen()))
             except ImportError:
                 return self.antwort('"Suche fehlt, Update läuft"', code=503)
         if self.path == "/einstellungen.json":
-            return self.antwort(json.dumps(dict(cfg, profile=profile())))
+            return self.antwort(json.dumps(dict(cfg, profile=profile(),
+                                                moegliche_ziele=TREIBER[cfg["pult_typ"]].moegliche_ziele(cfg),
+                                                pult_typen={k: f"{v.name} ({v.getestet})" if v.getestet else v.name for k, v in TREIBER.items()})))
         if self.path == "/branding.json":
             return self.antwort(json.dumps(branding()))
         datei = {"/": "index.html", "/einstellungen": "einstellungen.html"}.get(self.path, self.path.lstrip("/"))
@@ -600,9 +447,7 @@ class Web(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     anwenden(cfg, False)
-    threading.Thread(target=nativ, daemon=True).start()
-    threading.Thread(target=udp_lebenszeichen, daemon=True).start()
-    threading.Thread(target=midi, daemon=True).start()
+    treiber.start()
     threading.Thread(target=led_abgleich, daemon=True).start()
     threading.Thread(target=update_wache, daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", WEB), Web)  # nur am Rechner selbst erreichbar

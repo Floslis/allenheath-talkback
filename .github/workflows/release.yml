@@ -26,6 +26,6 @@ jobs:
           printf '\n---\n\n**📦 Installieren / Install:** [Talkback.zip](https://github.com/%s/releases/latest/download/Talkback.zip) · [Anleitung](https://github.com/%s/blob/main/INSTALL.de.md) · [Guide](https://github.com/%s/blob/main/INSTALL.md)\n\nBereits installiert? Das Tool aktualisiert sich nachts um 4 Uhr von selbst. / Already installed? The tool updates itself at 4 am.\n' "$GITHUB_REPOSITORY" "$GITHUB_REPOSITORY" "$GITHUB_REPOSITORY" >> notes.md
           # fertiges Paket: Ordner „Talkback“ ohne Entwickler-Dateien
           mkdir -p paket/Talkback
-          rsync -a --exclude '.git*' --exclude '.github' --exclude 'paket' --exclude 'notes.md' --exclude 'avantis-test.py' --exclude 'avantis-native.py' ./ paket/Talkback/
+          rsync -a --exclude '.git*' --exclude '.github' --exclude 'paket' --exclude 'notes.md' --exclude 'werkzeuge' --exclude 'docs/NEUES-PULT.md' ./ paket/Talkback/
           (cd paket && zip -qr ../Talkback.zip Talkback)
           gh release create "v$V" --title "v$V" --notes-file notes.md Talkback.zip
