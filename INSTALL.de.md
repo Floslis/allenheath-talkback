@@ -21,7 +21,7 @@ Dauert etwa 10 Minuten: 5 am Mac, 5 am Pult.
 
 ## 2. Am Mac installieren
 
-1. **[Talkback.zip herunterladen](https://github.com/Floslis/avantis-talkback/releases/latest/download/Talkback.zip)** (immer die neueste Version)
+1. **[Talkback.zip herunterladen](https://github.com/Floslis/allenheath-talkback/releases/latest/download/Talkback.zip)** (immer die neueste Version)
 2. Entpacken und den Ordner **`Talkback` direkt in deinen Benutzerordner** ziehen (Finder → Gehe zu → Benutzerordner, das Haus-Symbol)
 
    > ⚠️ **Nicht** auf den Schreibtisch, in „Dokumente“, „Downloads“ oder iCloud. Dort darf ein Autostart-Dienst unter macOS keine Dateien lesen, und das Tool startet nicht. Das Installationsskript prüft das und warnt dich.

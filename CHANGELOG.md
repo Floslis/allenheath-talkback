@@ -3,6 +3,14 @@
 Jede Version hat einen deutschen und einen englischen Teil. Die GitHub-Action nimmt den Abschnitt der neuen Version als Text für das Release.
 Each version has a German and an English part. The GitHub action uses the section of the new version as release text.
 
+## 0.6.1
+
+**Deutsch**
+- **Neuer Name:** Das Projekt heißt jetzt `allenheath-talkback`, weil SQ und dLive dazukommen. Updates kommen ab jetzt direkt von der neuen Adresse, alte Links leitet GitHub weiter
+
+**English**
+- **New name:** the project is now called `allenheath-talkback`, since SQ and dLive are coming. Updates now come straight from the new address, GitHub redirects old links
+
 ## 0.6.0
 
 **Deutsch**

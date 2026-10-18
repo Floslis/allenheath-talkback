@@ -3,7 +3,7 @@ Einstellungen (einstellungen.json) und eigene Branding-Profile bleiben unangetas
 import io, json, os, py_compile, shutil, ssl, sys, tempfile, time, urllib.request, zipfile
 from pathlib import Path
 
-REPO = "Floslis/avantis-talkback"
+REPO = "Floslis/allenheath-talkback"
 ORDNER = Path(__file__).resolve().parent
 SICHERUNG = ORDNER / ".sicherung"
 # Alles aus dem Release wird übernommen, außer dem, was dem Nutzer gehört
@@ -16,13 +16,13 @@ def version_tupel(v):
 
 
 def abrufen(url, timeout=15):
-    req = urllib.request.Request(url, headers={"User-Agent": "avantis-talkback", "Accept": "application/vnd.github+json"})
+    req = urllib.request.Request(url, headers={"User-Agent": "allenheath-talkback", "Accept": "application/vnd.github+json"})
     try:
         return urllib.request.urlopen(req, timeout=timeout).read()
     except ssl.SSLError:
         # manche Python-Installationen kennen die Zertifikate des Systems nicht
         import subprocess
-        return subprocess.run(["/usr/bin/curl", "-fsSL", "-H", "User-Agent: avantis-talkback", url],
+        return subprocess.run(["/usr/bin/curl", "-fsSL", "-H", "User-Agent: allenheath-talkback", url],
                               capture_output=True, check=True, timeout=timeout).stdout
 
 
@@ -47,7 +47,7 @@ def installieren(zip_url):
         tmp = Path(tmp)
         dateien = []
         for info in daten.infolist():
-            teile = info.filename.split("/", 1)  # erster Ordner ist „Floslis-avantis-talkback-<sha>“
+            teile = info.filename.split("/", 1)  # erster Ordner ist „Floslis-allenheath-talkback-<sha>“
             if len(teile) < 2 or not teile[1] or info.is_dir():
                 continue
             name = teile[1]
