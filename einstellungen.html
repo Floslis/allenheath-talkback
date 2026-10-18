@@ -1,0 +1,190 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talkback · Einstellungen</title>
+<style>
+/* Einstellungen: Pult, welche Mixe im Tool erscheinen, Gruppen mit Softkey (Mute-Gruppe). Gleiche Farben wie die Hauptseite */
+:root {
+  --bg: #eef0f2; --flaeche: #ffffff; --linie: #c9ced6; --text: #14181f; --leise: #5b6472;
+  --an: #d9282f; --an-hell: #fde7e8; --wahl: #1f6feb; --wahl-hell: #dbe8ff;
+  --display: "Barlow Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
+  --body: "Barlow", "Avenir Next", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1014; --flaeche: #171b21; --linie: #2a313b; --text: #e8ebf0; --leise: #8c96a5;
+  --an: #ff4d52; --an-hell: #3a1517; --wahl: #4c8dff; --wahl-hell: #16243d; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0d1014; --flaeche: #171b21; --linie: #2a313b; --text: #e8ebf0; --leise: #8c96a5;
+  --an: #ff4d52; --an-hell: #3a1517; --wahl: #4c8dff; --wahl-hell: #16243d; color-scheme: dark }
+body { background: var(--bg); color: var(--text); font-family: var(--body); font-size: 16px; margin: 0; }
+.app { max-width: 980px; margin: 0 auto; padding: 16px 16px 40px; display: grid; gap: 22px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 30px; margin: 0; }
+h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--leise); margin: 0 0 10px; font-weight: 600; }
+section { background: var(--flaeche); border: 1px solid var(--linie); border-radius: 12px; padding: 16px; }
+.felder { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+label.feld { display: grid; gap: 4px; font-size: 14px; font-weight: 600; }
+label.feld small { font-weight: 400; color: var(--leise); }
+input[type=text], input[type=number], select { font: 16px var(--body); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--linie); background: var(--bg); color: var(--text); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--linie); border-radius: 999px; padding: 5px 10px; font-size: 14px; cursor: pointer; user-select: none; }
+.chip input { margin: 0; }
+.chip:has(input:checked) { border-color: var(--wahl); background: var(--wahl-hell); }
+.chip small { color: var(--leise); }
+.gruppe { border: 1px solid var(--linie); border-radius: 10px; padding: 12px; display: grid; gap: 10px; margin-bottom: 10px; }
+.gruppe-kopf { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.gruppe-kopf label.feld { flex: 1 1 160px; }
+.rest { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; padding-bottom: 8px; }
+.knopf { border: 1px solid var(--linie); background: var(--flaeche); color: var(--text); border-radius: 8px; padding: 8px 14px; font: 600 14px var(--body); cursor: pointer; }
+.knopf.haupt { background: var(--wahl); border-color: var(--wahl); color: #fff; }
+.knopf.weg { color: var(--an); }
+.leiste { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; position: sticky; bottom: 0; padding: 12px 0; background: var(--bg); }
+.meldung { font-size: 14px; }
+.meldung.fehler { color: var(--an); }
+.hinweis { font-size: 13px; color: var(--leise); margin: 8px 0 0; line-height: 1.5; }
+a { color: var(--wahl); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--wahl); outline-offset: 2px; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@700&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<div class="app">
+  <header><h1>Einstellungen</h1><a href="/">← zurück zum Talkback</a></header>
+
+  <section>
+    <h2>Aussehen</h2>
+    <div class="felder">
+      <label class="feld">Branding<small>Logo, Titel und Farben aus dem Ordner „branding“</small><select id="branding"></select></label>
+    </div>
+  </section>
+
+  <section>
+    <h2>Pult</h2>
+    <div class="felder">
+      <label class="feld">IP-Adresse des Pults<input type="text" id="pult_ip" inputmode="decimal"></label>
+      <label class="feld">Talkback-Kanal<small>Eingang mit dem Talkback-Mikro</small><input type="number" id="talkback_kanal" min="1" max="128"></label>
+      <label class="feld">MIDI-Basiskanal<small>Setup → Control → MIDI, Standard 12</small><input type="number" id="midi_kanal" min="1" max="12"></label>
+      <label class="feld">Mono-Aux im Pult<small>Anzahl laut Mix-Konfiguration</small><input type="number" id="mono_aux_anzahl" min="0" max="24"></label>
+    </div>
+  </section>
+
+  <section>
+    <h2>Diese Mixe erscheinen im Tool</h2>
+    <div class="chips" id="ziele"></div>
+    <p class="hinweis">Namen kommen vom Pult, sobald es verbunden ist.</p>
+  </section>
+
+  <section>
+    <h2>Gruppen</h2>
+    <div id="gruppen"></div>
+    <button class="knopf" id="neu" type="button">+ Gruppe hinzufügen</button>
+    <p class="hinweis">„Alle übrigen“: Die Gruppe enthält jeden Mix, der in keiner anderen Gruppe steckt (z. B. „Band“). Softkey: Lege am Pult einen Softkey auf eine <b>leere</b> Mute-Gruppe und trag ihre Nummer hier ein. Die LED leuchtet grün, wenn die Gruppe an ist.</p>
+  </section>
+
+  <div class="leiste">
+    <button class="knopf haupt" id="speichern" type="button">Speichern</button>
+    <span class="meldung" id="meldung"></span>
+  </div>
+</div>
+
+<script>
+// Branding-Profil (branding/<name>/profil.json): Titel, Logo, Farben
+(async () => {
+  try {
+    const b = await (await fetch('/branding.json')).json();
+    document.title = b.titel + (document.title.includes('·') ? ' · ' + document.title.split('·').pop().trim() : '');
+    const t = document.getElementById('titel'); if (t) t.textContent = b.titel;
+    const l = document.getElementById('logo'); if (l) l.innerHTML = b.logo || '';
+    const css = (v) => Object.entries(v || {}).map(([k, w]) => `--${k}: ${w};`).join(' ');
+    const f = b.farben || {};
+    const s = document.createElement('style');
+    s.textContent = `:root { ${css(f.hell)} }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { ${css(f.dunkel)} } }
+:root[data-theme="dark"] { ${css(f.dunkel)} }`;
+    document.head.append(s);
+  } catch {}
+})();
+
+const $ = (id) => document.getElementById(id);
+const ALLE = [...Array(24)].map((_, i) => `aux${i + 1}`).concat([...Array(12)].map((_, i) => `staux${i + 1}`));
+const titel = (k) => k.startsWith('st') ? `StAux ${k.slice(5)}` : `Aux ${k.slice(3)}`;
+let cfg, namen = {};
+
+function chip(text, klein, an, onchange, typ = 'checkbox', gruppe) {
+  const l = document.createElement('label');
+  l.className = 'chip';
+  const i = document.createElement('input');
+  i.type = typ; i.checked = an; if (gruppe) i.name = gruppe;
+  i.onchange = () => onchange(i.checked);
+  l.append(i, document.createTextNode(text));
+  if (klein) { const s = document.createElement('small'); s.textContent = klein; l.append(s); }
+  return l;
+}
+
+function malen() {
+  $('branding').replaceChildren(...Object.entries(cfg.profile).map(([k, n]) => new Option(n, k)));
+  $('branding').value = cfg.branding;
+  for (const f of ['pult_ip', 'talkback_kanal', 'midi_kanal', 'mono_aux_anzahl']) $(f).value = cfg[f];
+  $('ziele').replaceChildren(...ALLE.map((k) => chip(titel(k), namen[k], cfg.ziele.includes(k), (an) => {
+    cfg.ziele = an ? ALLE.filter((x) => x === k || cfg.ziele.includes(x)) : cfg.ziele.filter((x) => x !== k);
+    for (const g of cfg.gruppen) g.mixe = g.mixe.filter((m) => cfg.ziele.includes(m));
+    malen();
+  })));
+  $('gruppen').replaceChildren(...cfg.gruppen.map((g, gi) => {
+    const box = document.createElement('div');
+    box.className = 'gruppe';
+    const kopf = document.createElement('div');
+    kopf.className = 'gruppe-kopf';
+    const name = document.createElement('label');
+    name.className = 'feld'; name.textContent = 'Name';
+    const ni = document.createElement('input');
+    ni.type = 'text'; ni.maxLength = 20; ni.value = g.name; ni.oninput = () => { g.name = ni.value; };
+    name.append(ni);
+    const mg = document.createElement('label');
+    mg.className = 'feld'; mg.textContent = 'Softkey (Mute-Gruppe)';
+    const ms = document.createElement('select');
+    ms.innerHTML = '<option value="">keiner</option>' + [...Array(24)].map((_, i) => `<option value="${i + 1}">Mute-Gruppe ${i + 1}</option>`).join('');
+    ms.value = g.mutegruppe ?? ''; ms.onchange = () => { g.mutegruppe = ms.value ? +ms.value : null; };
+    mg.append(ms);
+    const rest = document.createElement('label');
+    rest.className = 'rest';
+    const ri = document.createElement('input');
+    ri.type = 'checkbox'; ri.checked = g.rest;
+    ri.onchange = () => { cfg.gruppen.forEach((h) => { h.rest = h === g && ri.checked; }); malen(); };
+    rest.append(ri, document.createTextNode('alle übrigen'));
+    const weg = document.createElement('button');
+    weg.type = 'button'; weg.className = 'knopf weg'; weg.textContent = 'Entfernen';
+    weg.onclick = () => { cfg.gruppen.splice(gi, 1); malen(); };
+    kopf.append(name, mg, rest, weg);
+    box.append(kopf);
+    if (!g.rest) {
+      const mixe = document.createElement('div');
+      mixe.className = 'chips';
+      mixe.append(...cfg.ziele.map((k) => chip(titel(k), namen[k], g.mixe.includes(k), (an) => {
+        g.mixe = an ? cfg.ziele.filter((x) => x === k || g.mixe.includes(x)) : g.mixe.filter((x) => x !== k);
+      })));
+      box.append(mixe);
+    }
+    return box;
+  }));
+}
+
+$('branding').onchange = () => { cfg.branding = $('branding').value; };
+$('neu').onclick = () => { cfg.gruppen.push({ name: `Gruppe ${cfg.gruppen.length + 1}`, rest: false, mixe: [], mutegruppe: null }); malen(); };
+$('speichern').onclick = async () => {
+  cfg.branding = $('branding').value;
+  for (const f of ['pult_ip', 'talkback_kanal', 'midi_kanal', 'mono_aux_anzahl']) cfg[f] = f === 'pult_ip' ? $(f).value.trim() : +$(f).value;
+  const r = await fetch('/einstellungen', { method: 'POST', body: JSON.stringify(cfg) });
+  const ok = r.ok;
+  $('meldung').className = 'meldung' + (ok ? '' : ' fehler');
+  $('meldung').textContent = ok ? '✅ Gespeichert' : `Nicht gespeichert: ${await r.json()}`;
+  if (ok) setTimeout(() => location.reload(), 600); // neues Branding sofort sehen
+};
+
+(async () => {
+  cfg = await (await fetch('/einstellungen.json')).json();
+  try {
+    const z = await (await fetch('/zustand')).json();
+    z.keys.forEach((k, i) => { if (z.namen[i]) namen[k] = z.namen[i]; });
+  } catch {}
+  malen();
+})();
+</script>

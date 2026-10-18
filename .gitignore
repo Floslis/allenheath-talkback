@@ -1,0 +1,10 @@
+__pycache__/
+*.log
+*.pcap
+.DS_Store
+gruppen.json
+einstellungen.json
+branding/*
+!branding/standard/
+!branding/beispiel/
+mockup.html

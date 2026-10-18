@@ -1,0 +1,9 @@
+{
+  "name": "Beispiel: eigene Gemeinde",
+  "titel": "Talkback",
+  "logo": "logo.svg",
+  "farben": {
+    "hell": { "an": "#c2410c", "an-hell": "#ffedd5" },
+    "dunkel": { "an": "#fb923c", "an-hell": "#3b1d0c" }
+  }
+}
