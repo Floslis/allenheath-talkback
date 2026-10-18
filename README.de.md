@@ -41,8 +41,8 @@ Trotzdem wollen wir **einzeln steuern, wer uns hört**. Und das Pult hat keinen 
 | Pult | Firmware | Stand |
 |---|---|---|
 | Allen & Heath **Avantis** | V2.01 Rev. 97241 | ✅ jeden Sonntag im Einsatz |
+| Allen & Heath SQ | – | 🧪 Test bald |
 | Allen & Heath dLive | – | 🔜 geplant |
-| Allen & Heath SQ | – | 🔜 geplant |
 
 Weitere Pulte kommen als eigene Treiber dazu. Du hast ein Pult und willst helfen? Mach ein Issue auf.
 
@@ -94,12 +94,32 @@ Das Profil wählst du unter Einstellungen → Aussehen. Eigene Profile landen ni
 
 ## Roadmap
 
+**Erledigt**
 - [x] Einstellungen im Tool: Pult-IP, Kanal, Mixe, beliebig viele Gruppen
 - [x] Branding-Profile: Logo, Titel, Farben
-- [x] Updates von GitHub: Prüfung alle 6 Stunden, Installation um 4 Uhr nachts (nie im Gottesdienst) oder per Klick
-- [ ] **Weitere Pulte** über Treiber: dLive, SQ
-- [x] Englische Oberfläche
-- [ ] **Bedienung vom Handy oder Tablet** im lokalen Netz, abschaltbar
+- [x] Updates von GitHub: Prüfung alle 6 Stunden, Installation um 4 Uhr nachts oder per Klick
+- [x] Pult im Netz suchen, Mixe werden selbst erkannt
+- [x] Neues Design, englische Oberfläche, Pause und Beenden
+
+**Als Nächstes: Treiber-Aufbau**
+- [ ] Den pultspezifischen Teil in Treiber auslagern (`pulte/avantis.py`), damit neue Pulte dazukommen, ohne den Rest anzufassen
+- [ ] Test-Checkliste für Treiber: was man an einem neuen Pult in etwa 30 Minuten mitschneidet und ausprobiert
+
+**Allen & Heath SQ** (zwei Pulte zum Testen bald verfügbar)
+- [ ] Prüfen, was die SQ übers Netz kann (MIDI über TCP, natives Protokoll wie beim Avantis)
+- [ ] Assign eines Eingangs auf Aux-Mixe mitschneiden und nachbauen
+- [ ] Softkeys mit LED-Rückmeldung an der SQ
+- [ ] SQ-Treiber, an beiden Pulten getestet
+
+**Avantis: andere Mix-Konfigurationen**
+- [ ] Mit anderer Zahl Mono- und Stereo-Aux testen, um zu beweisen, wo die Stereo-Aux im Protokoll liegen
+- [ ] Gruppen und Matrizen als Ziele
+
+**Allen & Heath dLive** (sobald ein Pult verfügbar ist)
+- [ ] Dieselben Schritte wie bei der SQ: prüfen, mitschneiden, Treiber, testen
+
+**Später**
+- [ ] Bedienung vom Handy oder Tablet im lokalen Netz, abschaltbar
 
 ## Gut zu wissen
 

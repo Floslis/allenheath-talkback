@@ -41,8 +41,8 @@ But we still want to decide **who hears us**, mix by mix. And the desk has no so
 | Desk | Firmware | Status |
 |---|---|---|
 | Allen & Heath **Avantis** | V2.01 Rev. 97241 | ✅ in use every Sunday |
+| Allen & Heath SQ | – | 🧪 testing soon |
 | Allen & Heath dLive | – | 🔜 planned |
-| Allen & Heath SQ | – | 🔜 planned |
 
 More desks will come as separate drivers. Have a desk and want to help? Open an issue.
 
@@ -94,12 +94,32 @@ Choose the profile under Settings → Appearance. Your own profiles are not trac
 
 ## Roadmap
 
+**Done**
 - [x] Settings in the tool: desk IP, channel, mixes, any number of groups
 - [x] Branding profiles: logo, title, colours
-- [x] Updates from GitHub: checks every 6 hours, installs at 4 am (never during a service) or with one click
-- [ ] **More desks** via drivers: dLive, SQ
-- [x] English interface
-- [ ] **Control from phone or tablet** on the local network, optional
+- [x] Updates from GitHub: checks every 6 hours, installs at 4 am or with one click
+- [x] Find desk on the network, mixes detected automatically
+- [x] New design, English interface, pause and quit
+
+**Next: driver architecture**
+- [ ] Split the desk-specific part into drivers (`pulte/avantis.py`), so new desks plug in without touching the rest
+- [ ] Driver test checklist: what to capture and try at a new desk in about 30 minutes
+
+**Allen & Heath SQ** (two desks available for testing soon)
+- [ ] Check what the SQ offers over the network (MIDI over TCP, native protocol like the Avantis)
+- [ ] Capture and rebuild assign of an input to aux mixes
+- [ ] Softkeys with LED feedback on the SQ
+- [ ] SQ driver, tested on both desks
+
+**Avantis: other mix configurations**
+- [ ] Test with different numbers of mono and stereo auxes, to prove where stereo auxes sit in the protocol
+- [ ] Groups and matrices as targets
+
+**Allen & Heath dLive** (when a desk is available)
+- [ ] Same steps as the SQ: check, capture, driver, test
+
+**Later**
+- [ ] Control from phone or tablet on the local network, optional
 
 ## Good to know
 
